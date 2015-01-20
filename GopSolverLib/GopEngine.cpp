@@ -1,0 +1,642 @@
+#include "stdafx.h"
+#include "GopEngine.h"
+
+using namespace std;
+
+vector<Point> getLineOfSight(int x1, int y1, int x2, int y2)
+{
+	int distX = x2 - x1;
+	int distY = y2 - y1;
+	vector<Point> v;
+	if (distX == 0 && distY == 0)
+		return v;
+	else if (x1 > x2)
+	{
+		v = getLineOfSight(x2, y2, x1, y1);
+		reverse(begin(v), end(v));
+	}
+	else if (y1 > y2)
+	{
+		v = getLineOfSight(x1, -y1, x2, -y2);
+		transform(begin(v), end(v), begin(v), [](Point p) { return Point(p.x, -p.y); });
+	}
+	else if (distX == 0)
+	{
+		for (int y = y1; y <= y2; y++)
+			v.push_back(Point(x1, y));
+	}
+	else if (distY == 0)
+	{
+		for (int x = x1; x <= x2; x++)
+			v.push_back(Point(x, y1));
+	}
+	else if (distX == distY)
+	{
+		for (int x = x1, y = y1; x <= x2, y <= y2; x++, y++)
+			v.push_back(Point(x, y));
+	}
+	else if (abs(distY) > abs(distX))
+	{
+		if (distX * distY > 0)
+		{
+			v = getLineOfSight(y1, x1, y2, x2);
+			transform(begin(v), end(v), begin(v), [](Point p) { return Point(p.y, p.x); });
+		}
+		else
+		{
+			v = getLineOfSight(-y1, -x1, -y2, -x2);
+			transform(begin(v), end(v), begin(v), [](Point p) { return Point(-p.y, -p.x); });
+		}
+	}
+	else    // First octant
+	{
+		v.push_back(Point(x1, y1));
+		int x = x1 + 1;
+		int y = y1;
+		int error = distX / 2;
+		while (x <= x2)
+		{
+			v.push_back(Point(x, y));
+			if (error == 0)
+			{
+				x += 1;
+				error += distY;
+			}
+			else
+			{
+				error += distY;
+				x += 1;
+				if (error > distX)
+				{
+					y += 1;
+					v.push_back(Point(x - 1, y));
+					error -= distX;
+				}
+				else if (error == distX)
+				{
+					y += 1;
+					// These are just edge cases.
+					if (distX == 6 && (distY == 1 || distY == 5)
+						|| distX == 10 && (distY == 1 || distY == 3 || distY == 7 || distY == 9))
+						v.push_back(Point(x, y - 1));
+					else
+						v.push_back(Point(x - 1, y));
+					error = 0;
+				}
+			}
+		}
+	}
+	return v;
+}
+
+GopArray<Tile> GopEngine::grid;
+GopArray<vector<Point>> GopEngine::neighbors[3];
+GopArray<int> GopEngine::distancesToAltarTable;
+std::unordered_map<GameState, vector<shared_ptr<GameStateNode>>> solutionCache;
+std::unordered_map<pair<Point, Point>, bool> reachabilityCache;
+std::unordered_map<pair<Point, Point>, int> distanceToReachableCache;
+std::unordered_map<pair<Point, Point>, deque<Point>> playerPathCache;
+
+Tile GopEngine::get(int x, int y)
+{
+	return grid.get(x, y);
+}
+
+void GopEngine::calculateTables()
+{
+	solutionCache.clear();
+	reachabilityCache.clear();
+	distanceToReachableCache.clear();
+	playerPathCache.clear();
+
+	for (int i = 0; i < 3; ++i)
+	{
+		neighbors[i].clear();
+		for (int y = -GRID_MAX; y <= GRID_MAX; y++)
+		{
+			for (int x = -GRID_MAX; x <= GRID_MAX; x++)
+			{
+				Point p = Point(x, y);
+				for (const Point& offset : Point::offsets)
+					if (canMove(p, offset, (PathMode)i, true))
+						neighbors[i][p].push_back(p + offset);
+			}
+		}
+	}
+
+	for (int y = 0; y < GRID_SIZE; ++y)
+		for (int x = 0; x < GRID_SIZE; ++x)
+			distancesToAltarTable.data[y][x] = numeric_limits<int>::max();
+
+	queue<pair<Point, int>> agenda;
+	GopArray<bool> visited;
+	for (const Point& p : Point::pointsAdjacentToAltar)
+	{
+		agenda.emplace(p, 0);
+		visited[p] = true;
+	}
+
+	while (!agenda.empty())
+	{
+		auto curr = agenda.front();
+		agenda.pop();
+		distancesToAltarTable[curr.first] = curr.second;
+
+		for (Point d : Point::offsets)
+		{
+			Point next = ::get<0>(curr) + d;
+			if (canMove(::get<0>(curr) + d, -d, PathMode::Orb) && !visited[next])
+			{
+				visited[next] = true;
+				agenda.emplace(next, ::get<1>(curr) + 1);
+			}
+		}
+	}
+}
+
+void GopEngine::clear()
+{
+	grid.clear();
+	calculateTables();
+}
+
+void GopEngine::loadAltar(const char* data)
+{
+	int x = 0, y = 0;
+	for (int i = 0; data[i]; ++i)
+	{
+		if (data[i] == '\r' || data[i] == '\n')
+			continue;
+		if (x == GRID_SIZE)
+		{
+			x = 0;
+			++y;
+		}
+		grid.data[y][x++] = (Tile)(data[i] - '0');
+	}
+	calculateTables();
+}
+
+void GopEngine::loadAltarFromFile(string path)
+{
+	ifstream fin(path);
+	char c;
+	int x = 0, y = 0;
+	while (fin >> c)
+	{
+		if (x == GRID_SIZE)
+		{
+			x = 0;
+			++y;
+		}
+		grid.data[y][x++] = (Tile)(c - '0');
+	}
+	calculateTables();
+}
+
+bool GopEngine::isPassable(Point p, PathMode mode)
+{
+	return grid[p] != Tile::Wall && (mode < PathMode::Orb || grid[p] != Tile::Rock) && (mode < PathMode::Player || grid[p] != Tile::Water);
+}
+
+bool GopEngine::canMoveWest(Point p, PathMode mode)
+{
+	return isInRange(p) && isInRange(p + Point::west) && isPassable(p, mode) && isPassable(p + Point::west, mode) && grid[p] != Tile::PanelW && grid[p] != Tile::PanelSW;
+}
+
+bool GopEngine::canMoveWest(int x, int y, PathMode mode)
+{
+	return canMoveWest(Point(x, y), mode);
+}
+
+bool GopEngine::canMoveSouth(Point p, PathMode mode)
+{
+	return isInRange(p) && isInRange(p + Point::south) && isPassable(p, mode) && isPassable(p + Point::south, mode) && grid[p] != Tile::PanelS && grid[p] != Tile::PanelSW;
+}
+
+bool GopEngine::canMoveSouth(int x, int y, PathMode mode)
+{
+	return canMoveSouth(Point(x, y), mode);
+}
+
+// d.x and d.y must be no more than 1 in absolute value.
+bool GopEngine::canMove(Point p, Point d, PathMode mode, bool calculate)
+{
+	if (!calculate)
+	{
+		auto& v = neighbors[(int)mode][p];
+		return find(begin(v), end(v), p + d) != v.end();
+	}
+
+	int ddx = d.x == 1 ? 1 : 0;
+	int ddy = d.y == 1 ? 1 : 0;
+
+	Tile old = grid[p];
+	if (!isPassable(p, mode))
+		grid[p] = Tile::Floor;
+
+	bool result = true;
+	if (d.y == 0)
+		result = canMoveWest(p.x + ddx, p.y, mode);
+	else if (d.x == 0)
+		result = canMoveSouth(p.x, p.y + ddy, mode);
+	else if (mode == PathMode::Sight)
+	{
+		if ((!canMoveWest(p.x + ddx, p.y + ddy, mode) && !canMoveWest(p.x + ddx, p.y + ddy - 1, mode)) ||
+			(!canMoveSouth(p.x + ddx, p.y + ddy, mode) && !canMoveSouth(p.x + ddx - 1, p.y + ddy, mode)))
+			result = false;
+		else if (d.x == d.y)
+			result = !((!canMoveWest(p.x + ddx, p.y + ddy, mode) && !canMoveSouth(p.x + ddx, p.y + ddy, mode)) ||
+			(!canMoveWest(p.x + ddx, p.y + ddy - 1, mode) && !canMoveSouth(p.x + ddx - 1, p.y + ddy, mode)));
+		else
+			result = !((!canMoveWest(p.x + ddx, p.y + ddy, mode) && !canMoveSouth(p.x + ddx - 1, p.y + ddy, mode)) ||
+			(!canMoveWest(p.x + ddx, p.y + ddy - 1, mode) && !canMoveSouth(p.x + ddx, p.y + ddy, mode)));
+	}
+	else
+	{
+		if ((d.x == -d.y && get(p.x + ddx, p.y + ddy) == Tile::MiniPillar1) || (d.x == d.y && get(p.x + ddx, p.y + ddy) == Tile::MiniPillar2))
+			result = false;
+		else
+			result = canMoveWest(p.x + ddx, p.y + ddy, mode) && canMoveWest(p.x + ddx, p.y + ddy - 1, mode) && canMoveSouth(p.x + ddx, p.y + ddy, mode) && canMoveSouth(p.x + ddx - 1, p.y + ddy, mode);
+	}
+
+	grid[p] = old;
+	return result;
+}
+
+inline int sign(int x)
+{
+	return x == 0 ? 0 : x > 0 ? 1 : -1;
+}
+
+// Returns the value that is smaller in absolute value.
+inline int absmin(int x, int y) {
+	return abs(x) < abs(y) ? x : y;
+}
+
+// Returns the orb offset from a player click.
+Point GopEngine::getOrbOffset(Point diff, bool toPlayer) {
+	double m = abs((double)diff.y / diff.x);
+	int dx = sign(diff.x);
+	int dy = sign(diff.y);
+	Point result;
+	if (m > 2)
+		result = Point(0, 2 * dy);
+	else if (m > 1)
+		result = Point(dx, 2 * dy);
+	else if (m == 1)
+		result = Point(2 * dx, 2 * dy);
+	else if (m >= 0.5)
+		result = Point(2 * dx, dy);
+	else
+		result = Point(2 * dx, 0);
+	return toPlayer ? Point(absmin(result.x, diff.x - dx), absmin(result.y, diff.y - dy)) : result;
+}
+
+Point GopEngine::nextOrbLocation(Point location, Point target)
+{
+	if (target == Point::invalid)
+		return location;
+
+	Point orbOffset = target - location;
+	int dx = sign(orbOffset.x);
+	int dy = sign(orbOffset.y);
+	Point offset{ dx, dy };
+	if (!GopEngine::canMove(location, Point(dx, dy), PathMode::Orb))
+	{
+		if (GopEngine::canMove(location, Point(dx, 0), PathMode::Orb))
+			offset = Point(dx, 0);
+		else if (GopEngine::canMove(location, Point(0, dy), PathMode::Orb))
+			offset = Point(0, dy);
+		else
+			offset = Point::zero;
+	}
+
+	return location + offset;
+}
+
+bool GopEngine::canReach(Point p1, Point p2, bool repel)
+{
+	if (p1 == p2 || p1.walkingDistanceTo(p2) > (repel ? MAX_REPEL_REACH_DISTANCE : MAX_REACH_DISTANCE))
+		return false;
+
+	if (reachabilityCache.find({ p1, p2 }) != reachabilityCache.end())
+		return reachabilityCache[{ p1, p2 }];
+
+	auto lineOfSight = getLineOfSight(p1.x, p1.y, p2.x, p2.y);
+	for (size_t i = 1; i < lineOfSight.size(); ++i)
+	{
+		if (!(i == lineOfSight.size() - 1 && !isPassable(lineOfSight[i], PathMode::Orb)) && !canMove(lineOfSight[i - 1], lineOfSight[i] - lineOfSight[i - 1], PathMode::Sight))
+		{
+			reachabilityCache[{ p1, p2 }] = false;
+			return false;
+		}
+	}
+	reachabilityCache[{ p1, p2 }] = true;
+	return true;
+}
+
+int GopEngine::distanceToAltar(Point p)
+{
+	return distancesToAltarTable[p];
+}
+
+int GopEngine::distanceToPoint(Point p1, Point p2)
+{
+	const auto& path = getPlayerPath(p1, p2);
+	if (path.empty() || path.back() == p2)
+		return (int)path.size();
+	return -1;
+}
+
+int GopEngine::distanceToReachable(Point p1, Point p2, bool repel)
+{
+	if (p1 == p2)
+		return 1;	// Must move away from orb!
+
+	if (distanceToReachableCache.find({ p1, p2 }) != distanceToReachableCache.end())
+		return distanceToReachableCache[{p1, p2}];
+
+	queue<pair<Point, int>> q;
+	GopArray<bool> visited;
+	visited[p1] = true;
+	q.push({ p1, 0 });
+	while (!q.empty())
+	{
+		auto curr = q.front();
+		q.pop();
+
+		if (canReach(curr.first, p2, repel))
+		{
+			distanceToReachableCache[{p1, p2}] = curr.second;
+			return curr.second;
+		}
+
+		for (const Point& neighbor : neighbors[(int)PathMode::Player][curr.first])
+		{
+			if (!visited[neighbor])
+			{
+				visited[neighbor] = true;
+				q.push({ neighbor, curr.second + 1 });
+			}
+		}
+	}
+
+	distanceToReachableCache[{p1, p2}] = std::numeric_limits<int>::max();
+	return std::numeric_limits<int>::max();
+}
+
+bool GopEngine::isAdjacentToAltar(Point p)
+{
+	return p.x >= -2 && p.x <= 2 && p.y >= -2 && p.y <= 2;
+}
+
+deque<Point> GopEngine::getPlayerPath(Point p1, Point p2, bool clickOrb)
+{
+	if (p1 == p2)
+	{
+		if (clickOrb)
+		{
+			for (int i = 0; i < 4; ++i) {
+				Point p = p1 + Point::offsets[i];
+				if (isInRange(p.x, p.y) && canMove(p1, Point::offsets[i], PathMode::Player))
+					return{ p };
+			}
+		}
+		else
+		{
+			return{};
+		}
+	}
+
+	if (playerPathCache.find({ p1, p2 }) != playerPathCache.end())
+		return playerPathCache[{ p1, p2 }];
+
+	queue<Point> q;
+	q.push(p1);
+	GopArray<Point> parents;
+	for (int y = 0; y < GRID_SIZE; ++y)
+		for (int x = 0; x < GRID_SIZE; ++x)
+			parents.data[y][x] = Point::invalid;
+	parents[p1] = Point::zero;
+	int minDist = INT_MAX;
+	Point best = Point::invalid;
+
+	while (!q.empty())
+	{
+		Point curr = q.front();
+		q.pop();
+		int dist = curr.distanceSquaredTo(p2);
+		if ((clickOrb ? dist : curr.walkingDistanceTo(p2)) <= 1 && canMove(curr, p2 - curr, PathMode::Player))
+		{
+			parents[p2] = curr;
+			best = p2;
+			break;
+		}
+		if (minDist > dist)
+		{
+			minDist = dist;
+			best = curr;
+		}
+		for (const Point& neighbor : neighbors[(int)PathMode::Player][curr])
+		{
+			if (parents[neighbor] == Point::invalid)
+			{
+				parents[neighbor] = curr;
+				q.push(neighbor);
+			}
+		}
+	}
+
+	deque<Point> path;
+	for (Point p = best; p != p1; p = parents[p])
+		path.push_front(p);
+	if (clickOrb && !path.empty() && path.back() == p2)
+		path.pop_back();	// Don't include orb location
+	playerPathCache[{ p1, p2 }] = path;
+	return path;
+};
+
+string GopEngine::gridStr()
+{
+	ostringstream ostr;
+	for (int y = 0; y < GRID_SIZE; ++y)
+	{
+		for (int x = 0; x < GRID_SIZE; ++x)
+			ostr << (int)grid.get(x, y);
+		ostr << endl;
+	}
+	return ostr.str();
+}
+
+bool GopEngine::willOrbScore(const Orb& orb)
+{
+	Point location = orb.location;
+	for (int i = 0; i < 4; i++)
+	{
+		// Orb will move to final location in at most 4 ticks
+		location = nextOrbLocation(location, orb.target);
+		if (isAdjacentToAltar(location))
+			return true;
+	}
+	return false;
+}
+
+bool GopEngine::isStateInGoal(const GameState& s)
+{
+	for (const Orb& orb : s.orbs)
+		if (!isAdjacentToAltar(orb.location))
+			return false;
+	return true;
+}
+
+vector<shared_ptr<GameStateNode>> GopEngine::solve(const GameState& initialState, bool attractOnly, int* pNumExpanded, bool debug)
+{
+	if (solutionCache.count(initialState) > 0)
+		return solutionCache[initialState];
+
+	priority_queue<shared_ptr<GameStateNode>, vector<shared_ptr<GameStateNode>>, CompareNode> agenda;
+	agenda.emplace(new GameStateNode(initialState, GameAction::idle(), attractOnly));
+	unordered_map<GameState, int> visitedCosts;
+	int minCost = INT_MAX;
+	vector<shared_ptr<GameStateNode>> solutions;
+	if (pNumExpanded != nullptr)
+		*pNumExpanded = 0;
+
+	while (!agenda.empty())
+	{
+		auto node = agenda.top();
+		agenda.pop();
+
+		if (pNumExpanded != nullptr)
+			++*pNumExpanded;
+
+		if (debug)
+			OutputDebugStringA((std::to_string(node->cost) + "," + std::to_string((int)node->getHeuristicCost()) + ", " + node->getActions() + "\n").c_str());
+
+		if (node->getHeuristicCost() > minCost)
+			break;
+
+		// If the orb target is adjacent to altar, then the orb will go into the altar for sure.
+		if (isStateInGoal(node->state))
+		{
+			if (minCost >= node->cost)
+			{
+				minCost = node->cost;
+				solutions.push_back(node);
+				// We don't need to branch from a solved state.
+				continue;
+			}
+		}
+
+		auto playerLocation = node->state.player.location;
+		auto orbs = node->state.orbs;
+
+		std::vector<std::shared_ptr<GameStateNode>> nodesToAdd;
+
+		// Idle for a tick
+		nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::idle(), attractOnly, node, node->cost + 1, 1));
+
+		// If orbs are about to score, the rest of the actions should be idle.
+		if (!std::all_of(std::begin(orbs), std::end(orbs), [](const Orb& orb) { return willOrbScore(orb); }))
+		{
+			for (int i = 0; i < (int)orbs.size(); ++i)
+			{
+				nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, false, false), attractOnly, node, node->cost + 1, 1));
+				nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, false, false), attractOnly, node, node->cost + 1, 1));
+				nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, false, true), attractOnly, node, node->cost + 1, 1));
+				nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, false, true), attractOnly, node, node->cost + 1, 1));
+				if (!attractOnly)
+				{
+					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, true, false), attractOnly, node, node->cost + 1, 1));
+					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, true, false), attractOnly, node, node->cost + 1, 1));
+					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, true, true), attractOnly, node, node->cost + 1, 1));
+					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, true, true), attractOnly, node, node->cost + 1, 1));
+				}
+			}
+
+			// All possible places to move, always running and not repelling
+
+			// Toggle run if walking
+			bool toggleRun = !node->state.player.run;
+			// Change wand if repelling
+			bool changeWand = node->state.player.repel;
+			for (const Point& next : neighbors[(int)PathMode::Player][playerLocation])
+				for (const Point& next2 : neighbors[(int)PathMode::Player][next])
+					if (next2 != playerLocation)
+						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::move(next2, toggleRun, changeWand), attractOnly, node, node->cost + 1, 1));
+		}
+
+		for (const auto& nodeToAdd : nodesToAdd)
+		{
+			if (visitedCosts.count(nodeToAdd->state) == 0 || visitedCosts[nodeToAdd->state] > nodeToAdd->cost)
+			{
+				visitedCosts[nodeToAdd->state] = nodeToAdd->cost;
+				agenda.push(nodeToAdd);
+			}
+		}
+	}
+
+	if (debug && pNumExpanded != nullptr)
+		OutputDebugString((L"Expanded " + std::to_wstring(*pNumExpanded) + L" states\n").c_str());
+
+	std::sort(std::begin(solutions), std::end(solutions), [](shared_ptr<GameStateNode> left, shared_ptr<GameStateNode> right) {
+		auto leftPath = left->getPath();
+		auto rightPath = right->getPath();
+		// Prefer shorter solutions
+		if (leftPath.size() != rightPath.size())
+			return leftPath.size() < rightPath.size();
+
+		// Prefer more idles at end
+		int numIdlesLeft = 0, numIdlesRight = 0;
+		while (leftPath.back().second.getType() == GameActionType::Idle)
+		{
+			++numIdlesLeft;
+			leftPath.pop_back();
+		}
+		while (rightPath.back().second.getType() == GameActionType::Idle)
+		{
+			++numIdlesRight;
+			rightPath.pop_back();
+		}
+
+		if (numIdlesLeft != numIdlesRight)
+			return numIdlesLeft > numIdlesRight;
+
+		// Then lexicographic
+		return left->getActions() < right->getActions();
+	});
+	solutionCache[initialState] = solutions;
+	return solutions;
+}
+
+double GameStateNode::getHeuristicCost() const
+{
+	return cost + state.getHeuristicCost(attractOnly);
+}
+
+std::deque<std::pair<GameState, GameAction>> GameStateNode::getPath() const
+{
+	std::deque<std::pair<GameState, GameAction>> d;
+	const GameStateNode* curr = this;
+	while (curr != nullptr)
+	{
+		d.emplace_front(curr->state, curr->action);
+		curr = curr->parent.get();
+	}
+	return d;
+}
+
+std::string GameStateNode::getActions() const
+{
+	return getActions(getPath());
+}
+
+std::string GameStateNode::getActions(std::deque<std::pair<GameState, GameAction>> path)
+{
+	std::deque<GameAction> actions;
+	for (auto& pair : path)
+		actions.push_back(pair.second);
+	actions.pop_front();	// Remove the initial idle.
+	return GameAction::formatActions(actions);
+}
