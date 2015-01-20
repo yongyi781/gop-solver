@@ -28,4 +28,4 @@
 #include <unordered_set>
 #include <string>
 #include <sstream>
-#include "..\GopSolverLib\GopEngine.h"
+#include "..\GopSolverLib\Solver.h"

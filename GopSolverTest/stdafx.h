@@ -9,6 +9,7 @@
 
 // Headers for CppUnitTest
 #include "CppUnitTest.h"
+#include <deque>
 #include <vector>
 #include <algorithm>
 #include "../GopSolverLib/GameState.h"

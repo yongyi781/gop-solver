@@ -16,9 +16,10 @@
 #include <algorithm>
 #include <random>
 #include <map>
+#include <memory>
 #include <queue>
 #include <set>
 #include <tuple>
 #include <functional>
 #include <Windows.h>
-#include "..\GopSolverLib\GopEngine.h"
+#include "..\GopSolverLib\Solver.h"

@@ -114,7 +114,7 @@ void benchmarkSolver(std::string altarFile, GameState state, bool attractOnly = 
 	GopEngine::loadAltarFromFile(altarFile);
 	int numExpanded;
 	auto t = currentTime();
-	auto solutions = GopEngine::solve(state, attractOnly, &numExpanded, debug);
+	auto solutions = Solver::solve(state, attractOnly, &numExpanded, debug);
 	auto diff = currentTime() - t;
 	double diffMs = (double)diff.count() / 1000000;
 	if (solutions.size() == 0)

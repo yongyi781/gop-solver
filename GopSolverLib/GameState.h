@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-#include <deque>
 #include "GameAction.h"
 
 class Orb
@@ -78,14 +76,7 @@ public:
 	bool operator==(const GameState& other) const;
 	bool operator!=(const GameState& other) const;
 
-	std::string toString() const
-	{
-		std::string str = "{player:" + player.toString() + ",orbs:[";
-		for (const Orb& orb : orbs)
-			str += orb.toString() + ",";
-		str += "]";
-		return str;
-	}
+	std::string toString() const;
 
 	// Stops all movement, and optionally orb movements.
 	void freeze(bool freezeOrbs = true);

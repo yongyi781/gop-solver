@@ -1,7 +1,5 @@
 #pragma once
 
-#include <deque>
-#include <string>
 #include "Point.h"
 
 enum class GameActionType { Idle, Move, Attract };

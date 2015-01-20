@@ -43,6 +43,15 @@ Point getTwoSquareOffset(Point diff)
 	return result;
 }
 
+std::string GameState::toString() const
+{
+	std::string str = "{player:" + player.toString() + ",orbs:[";
+	for (const Orb& orb : orbs)
+		str += orb.toString() + ",";
+	str += "]";
+	return str;
+}
+
 void GameState::freeze(bool freezeOrbs)
 {
 	player.freeze();

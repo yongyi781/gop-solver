@@ -322,7 +322,7 @@ void DoSolve()
 {
 	gs.freeze();
 	int num;
-	auto nodes = GopEngine::solve(gs, false, &num, true);
+	auto nodes = Solver::solve(gs, false, &num, true);
 	solutions.clear();
 	for (const auto& node : nodes)
 		solutions.push_back(node->getPath());

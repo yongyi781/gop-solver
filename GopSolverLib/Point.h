@@ -1,7 +1,5 @@
 #pragma once
 
-#include <xutility>
-
 class Point
 {
 public:
