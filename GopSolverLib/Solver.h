@@ -24,7 +24,7 @@ public:
 		}
 	}
 
-	double getHeuristicCost() const;
+	int getHeuristicCost() const;
 	std::deque<std::pair<GameState, GameAction>> getPath() const;
 	std::string getActions() const;
 

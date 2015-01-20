@@ -109,6 +109,7 @@ void GameState::stepPlayer(Player& p)
 		p.action = GameAction::idle(p.action.getToggleRun(), p.action.getChangeWand());
 	}
 
+	bool attractTwice = false;
 	switch (p.action.getType())
 	{
 	case GameActionType::Idle:
@@ -156,6 +157,7 @@ void GameState::stepPlayer(Player& p)
 		{
 			// "pre-attract" before wand changes state.
 			stepAttract(p);
+			attractTwice = true;
 		}
 
 		p.forceAttractOrb = -1;
@@ -168,7 +170,7 @@ void GameState::stepPlayer(Player& p)
 	if (p.action.getChangeWand())
 		p.repel = !p.repel;
 	if (p.action.getType() == GameActionType::Attract)
-		stepAttract(p, true);
+		stepAttract(p, attractTwice);
 	p.previousAction = p.action;
 }
 
@@ -208,7 +210,7 @@ void GameState::stepAttract(Player& p, bool isSecondAttract)
 		}
 
 		if (!p.hasMovedThisTick)
-			p.stepMove();
+			p.stepMove(isSecondAttract);
 
 		if (GopEngine::canReach(p.location, orb.location, p.repel))
 		{
@@ -245,7 +247,10 @@ void GameState::stepAttract(Player& p, bool isSecondAttract)
 	//	p.action = p.action.copyWithSettings(p.action.getToggleRun(), p.action.getChangeWand(), false);
 	//}
 
-	p.delayAttractFromMoving = p.hasMovedThisTick;
+	if (!p.hasMovedThisTick)
+		p.delayAttractFromMoving = false;
+	else if (!isSecondAttract)
+		p.delayAttractFromMoving = true;
 }
 
 void GameState::forceAttractNextTick(Player& p, int orbIndex)
@@ -285,6 +290,33 @@ void GameState::attractSuccess(Player& p, int orbIndex)
 	p.isAttracting = true;
 }
 
+bool GameState::needsToMoveForOrb(const Orb& orb) const
+{
+	return !GopEngine::willOrbScore(orb)
+		&& orb.target == Point::invalid
+		&& !GopEngine::canReach(player.location, orb.location, player.repel);
+}
+
+int GameState::getHeuristicCostSingleOrb(const Orb& orb, bool attractOnly) const
+{
+	if (GopEngine::willOrbScore(orb))
+		return GopEngine::distanceToAltar(orb.location);
+
+	int h = 0;
+	Point nextLocation = GopEngine::nextOrbLocation(orb.location, orb.target);
+	// Needs to move
+	if (needsToMoveForOrb(orb))
+	{
+		int distanceToReachable = GopEngine::distanceToReachable(player.location, orb.location, player.repel);
+		h += (1 + distanceToReachable) / 2;
+	}
+
+	// Add the distance to the altar.
+	if (!GopEngine::isAdjacentToAltar(orb.location))
+		h += 1 + GopEngine::distanceToAltar(nextLocation);
+	return h;
+}
+
 int GameState::getTwoTickHoldCost(int distances[], int currentOrb, bool prototick) const
 {
 	// Assuming 2 distances for now
@@ -305,41 +337,39 @@ int GameState::getTwoTickHoldCost(int distances[], int currentOrb, bool prototic
 	//- std::max(0, (distance1 - 3) / 3) - std::max(0, (distance2 - 1) / 3);
 }
 
-bool GameState::needsToMoveForOrb(const Orb& orb) const
-{
-	return !GopEngine::willOrbScore(orb)
-		&& orb.target == Point::invalid
-		&& !GopEngine::canReach(player.location, orb.location, player.repel);
-}
-
-double GameState::getHeuristicCostSingleOrb(const Orb& orb, bool attractOnly) const
-{
-	double h = 0;
-	Point nextLocation = GopEngine::nextOrbLocation(orb.location, orb.target);
-	// Needs to move
-	if (needsToMoveForOrb(orb))
-	{
-		int distanceToReachable = GopEngine::distanceToReachable(player.location, orb.location, player.repel);
-		h += (1 + distanceToReachable) / 2;
-	}
-
-	// Add the distance to the altar.
-	if (!GopEngine::isAdjacentToAltar(orb.location))
-		h += 1 + GopEngine::distanceToAltar(nextLocation);
-	return h;
-}
-
-double GameState::getHeuristicCost(bool attractOnly) const
+int GameState::getHeuristicCost(bool attractOnly) const
 {
 	if (GopEngine::isStateInGoal(*this))
 		return 0;
 
-	double h = 0;
+	int h = 0;
 
 	if (orbs.size() == 1)
 		return getHeuristicCostSingleOrb(orbs[0], attractOnly);
 	if (orbs.size() == 2)
 	{
+		bool will0Score = GopEngine::willOrbScore(orbs[0]),
+			will1Score = GopEngine::willOrbScore(orbs[1]);
+
+		if (will0Score && will1Score)
+			return std::max(GopEngine::distanceToAltar(orbs[0].location), GopEngine::distanceToAltar(orbs[1].location));
+		if (will0Score)
+		{
+			// Don't have to attract orb 0 again
+			h = getHeuristicCostSingleOrb(orbs[1], attractOnly);
+			if (player.delayAttractFromPrototick && player.currentOrb != 1)
+				h += 1;
+			return std::max(h, GopEngine::distanceToAltar(orbs[0].location));
+		}
+		if (will1Score)
+		{
+			// Don't have to attract orb 1 again
+			h = getHeuristicCostSingleOrb(orbs[0], attractOnly);
+			if (player.delayAttractFromPrototick && player.currentOrb != 0)
+				h += 1;
+			return std::max(h, GopEngine::distanceToAltar(orbs[1].location));
+		}
+
 		// Needs to move for both orbs
 		bool needsToMoveFor0 = needsToMoveForOrb(orbs[0]);
 		bool needsToMoveFor1 = needsToMoveForOrb(orbs[1]);
@@ -363,11 +393,6 @@ double GameState::getHeuristicCost(bool attractOnly) const
 
 		Point nextLocation0 = GopEngine::nextOrbLocation(orbs[0].location, orbs[0].target),
 			nextLocation1 = GopEngine::nextOrbLocation(orbs[1].location, orbs[1].target);
-
-		if (GopEngine::isAdjacentToAltar(orbs[0].location))
-			return getHeuristicCostSingleOrb(orbs[1], attractOnly);
-		if (GopEngine::isAdjacentToAltar(orbs[1].location))
-			return getHeuristicCostSingleOrb(orbs[0], attractOnly);
 
 		int distances[] = {
 			GopEngine::distanceToAltar(nextLocation0),
@@ -400,7 +425,7 @@ void Player::freeze()
 	lastOrbClickLocation = Point::invalid;
 }
 
-void Player::stepMove()
+void Player::stepMove(bool isSecondAttract)
 {
 	if (movePath.size() > 0)
 	{
@@ -414,6 +439,7 @@ void Player::stepMove()
 
 		location = next;
 		hasMovedThisTick = true;
-		delayAttractFromMoving = true;
+		if (!isSecondAttract)
+			delayAttractFromMoving = true;
 	}
 }

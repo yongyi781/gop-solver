@@ -2,7 +2,7 @@
 #include "Solver.h"
 #include "GopEngine.h"
 
-double GameStateNode::getHeuristicCost() const
+int GameStateNode::getHeuristicCost() const
 {
 	return cost + state.getHeuristicCost(attractOnly);
 }
@@ -69,7 +69,6 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 			}
 		}
 
-		auto playerLocation = node->state.player.location;
 		auto orbs = node->state.orbs;
 
 		std::vector<std::shared_ptr<GameStateNode>> nodesToAdd;
@@ -82,16 +81,20 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 		{
 			for (int i = 0; i < (int)orbs.size(); ++i)
 			{
-				nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, false, false), attractOnly, node, node->cost + 1, 1));
-				nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, false, false), attractOnly, node, node->cost + 1, 1));
-				nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, false, true), attractOnly, node, node->cost + 1, 1));
-				nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, false, true), attractOnly, node, node->cost + 1, 1));
-				if (!attractOnly)
+				// If orb is about to score, don't need to touch it again!
+				if (!GopEngine::willOrbScore(orbs[i]))
 				{
-					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, true, false), attractOnly, node, node->cost + 1, 1));
-					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, true, false), attractOnly, node, node->cost + 1, 1));
-					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, true, true), attractOnly, node, node->cost + 1, 1));
-					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, true, true), attractOnly, node, node->cost + 1, 1));
+					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, false, false), attractOnly, node, node->cost + 1, 1));
+					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, false, false), attractOnly, node, node->cost + 1, 1));
+					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, false, true), attractOnly, node, node->cost + 1, 1));
+					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, false, true), attractOnly, node, node->cost + 1, 1));
+					if (!attractOnly)
+					{
+						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, true, false), attractOnly, node, node->cost + 1, 1));
+						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, true, false), attractOnly, node, node->cost + 1, 1));
+						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, true, true), attractOnly, node, node->cost + 1, 1));
+						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, true, true), attractOnly, node, node->cost + 1, 1));
+					}
 				}
 			}
 
@@ -101,9 +104,9 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 			bool toggleRun = !node->state.player.run;
 			// Change wand if repelling
 			bool changeWand = node->state.player.repel;
-			for (const Point& next : GopEngine::getNeighbors(playerLocation, PathMode::Player))
+			for (const Point& next : GopEngine::getNeighbors(node->state.player.location, PathMode::Player))
 				for (const Point& next2 : GopEngine::getNeighbors(next, PathMode::Player))
-					if (next2 != playerLocation)
+					if (next2 != node->state.player.location)
 						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::move(next2, toggleRun, changeWand), attractOnly, node, node->cost + 1, 1));
 		}
 

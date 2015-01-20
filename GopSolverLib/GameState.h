@@ -44,7 +44,7 @@ public:
 
 	void stopAttracting();
 	void freeze();
-	void stepMove();
+	void stepMove(bool isSecondAttract = false);
 
 	Point location = Point::invalid;
 	bool run = true;
@@ -82,15 +82,15 @@ public:
 	void freeze(bool freezeOrbs = true);
 	// Steps one tick.
 	void step();
-		void stepOrb(Orb& orb);
+	void stepOrb(Orb& orb);
 	void stepPlayer(Player& player);
 	void stepAttract(Player& player, bool isSecondAttract = false);
 	void forceAttractNextTick(Player& player, int orbIndex);
 	void attractSuccess(Player& player, int orbIndex);
-	int getTwoTickHoldCost(int distances[], int currentOrb, bool prototick) const;
 	bool needsToMoveForOrb(const Orb & orb) const;
-	double getHeuristicCostSingleOrb(const Orb & orb, bool attractOnly) const;
-	double getHeuristicCost(bool attractOnly) const;
+	int getHeuristicCostSingleOrb(const Orb & orb, bool attractOnly) const;
+	int getTwoTickHoldCost(int distances[], int currentOrb, bool prototick) const;
+	int getHeuristicCost(bool attractOnly) const;
 
 	// Single player for now
 	Player player;
