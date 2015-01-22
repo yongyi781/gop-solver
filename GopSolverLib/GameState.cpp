@@ -2,6 +2,84 @@
 #include "GameState.h"
 #include "GopEngine.h"
 
+Orb::Orb(Point location, Point target) : location(location), target(target)
+{
+}
+
+bool Orb::operator==(const Orb & other) const
+{
+	return location == other.location && target == other.target;
+}
+
+bool Orb::operator!=(const Orb & other) const
+{
+	return !(*this == other);
+}
+
+std::string Orb::toString() const
+{
+	return "{" + location.toString() + "->" + target.toString() + "}";
+}
+
+Player::Player(Point location) : location(location)
+{
+}
+
+bool Player::operator==(const Player & other) const
+{
+	return location == other.location
+		&& currentOrb == other.currentOrb
+		&& delayAttractFromMoving == other.delayAttractFromMoving
+		&& delayAttractFromPrototick == other.delayAttractFromPrototick
+		&& isAttracting == other.isAttracting
+		&& forceAttractOrb == other.forceAttractOrb
+		&& holdLength == other.holdLength;
+}
+
+void Player::stopAttracting()
+{
+	currentOrb = -1;
+	isAttracting = false;
+	holdLength = 0;
+	forceAttractOrb = -1;
+}
+
+void Player::freeze()
+{
+	stopAttracting();
+	delayAttractFromMoving = false;
+	delayAttractFromPrototick = false;
+	hasMovedThisTick = false;
+	lastMoveTarget = Point::invalid;
+	lastAttractTarget = Point::invalid;
+	movePath.clear();
+	lastOrbClickLocation = Point::invalid;
+}
+
+void Player::stepMove(bool isSecondAttract)
+{
+	if (movePath.size() > 0)
+	{
+		Point next = movePath.front();
+		movePath.pop_front();
+		if (movePath.size() > 0 && run)
+		{
+			next = movePath.front();
+			movePath.pop_front();
+		}
+
+		location = next;
+		hasMovedThisTick = true;
+		if (!isSecondAttract)
+			delayAttractFromMoving = true;
+	}
+}
+
+std::string Player::toString() const
+{
+	return "{" + location.toString() + ",d:" + std::to_string(delayAttractFromMoving) + "}";
+}
+
 GameState::GameState(Player player, std::vector<Orb> orbs)
 	: player(player), orbs(orbs)
 {
@@ -405,41 +483,34 @@ int GameState::getHeuristicCost(bool attractOnly) const
 	return h;
 }
 
-void Player::stopAttracting()
+namespace std
 {
-	currentOrb = -1;
-	isAttracting = false;
-	holdLength = 0;
-	forceAttractOrb = -1;
-}
-
-void Player::freeze()
-{
-	stopAttracting();
-	delayAttractFromMoving = false;
-	delayAttractFromPrototick = false;
-	hasMovedThisTick = false;
-	lastMoveTarget = Point::invalid;
-	lastAttractTarget = Point::invalid;
-	movePath.clear();
-	lastOrbClickLocation = Point::invalid;
-}
-
-void Player::stepMove(bool isSecondAttract)
-{
-	if (movePath.size() > 0)
+	size_t hash<GameAction>::operator()(const GameAction& action) const
 	{
-		Point next = movePath.front();
-		movePath.pop_front();
-		if (movePath.size() > 0 && run)
-		{
-			next = movePath.front();
-			movePath.pop_front();
-		}
+		return action.hash();
+	}
 
-		location = next;
-		hasMovedThisTick = true;
-		if (!isSecondAttract)
-			delayAttractFromMoving = true;
+	size_t hash<Orb>::operator()(const Orb& orb) const
+	{
+		return hash<Point>()(orb.location) + 31 * (31 + hash<Point>()(orb.target));
+	}
+
+	size_t hash<Player>::operator()(const Player& player) const
+	{
+		return hash<Point>()(player.location) + 31 * (
+			31 + hash<int>()(player.currentOrb) + 31 * (
+			31 + hash<bool>()(player.delayAttractFromMoving) + 31 * (
+			31 + hash<bool>()(player.delayAttractFromPrototick) + 31 * (
+			31 + hash<bool>()(player.isAttracting) + 31 * (
+			31 + hash<int>()(player.forceAttractOrb) + 31 * (
+			31 + hash<int>()(player.holdLength)))))));
+	}
+
+	size_t hash<GameState>::operator()(const GameState& s) const
+	{
+		size_t h = hash<Player>()(s.player);
+		for (auto& orb : s.orbs)
+			h = (h + 31) * 31 + hash<Orb>()(orb);
+		return h;
 	}
 }
