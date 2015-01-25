@@ -374,7 +374,7 @@ bool GameState::needsToMoveForOrb(const Orb& orb) const
 		&& !GopEngine::canReach(player.location, orb.location, player.repel);
 }
 
-int GameState::getHeuristicCostSingleOrb(const Orb& orb, bool attractOnly) const
+int GameState::getHeuristicCostSingleOrb(const Orb& orb) const
 {
 	if (GopEngine::willOrbScore(orb))
 		return GopEngine::distanceToAltar(orb.location);
@@ -414,7 +414,7 @@ int GameState::getTwoTickHoldCost(int distances[], int currentOrb, bool prototic
 	//- std::max(0, (distance1 - 3) / 3) - std::max(0, (distance2 - 1) / 3);
 }
 
-int GameState::getHeuristicCost(bool attractOnly) const
+int GameState::getHeuristicCost() const
 {
 	if (GopEngine::isStateInGoal(*this))
 		return 0;
@@ -422,7 +422,7 @@ int GameState::getHeuristicCost(bool attractOnly) const
 	int h = 0;
 
 	if (orbs.size() == 1)
-		return getHeuristicCostSingleOrb(orbs[0], attractOnly);
+		return getHeuristicCostSingleOrb(orbs[0]);
 	if (orbs.size() == 2)
 	{
 		bool will0Score = GopEngine::willOrbScore(orbs[0]),
@@ -433,7 +433,7 @@ int GameState::getHeuristicCost(bool attractOnly) const
 		if (will0Score)
 		{
 			// Don't have to attract orb 0 again
-			h = getHeuristicCostSingleOrb(orbs[1], attractOnly);
+			h = getHeuristicCostSingleOrb(orbs[1]);
 			if (player.delayAttractFromPrototick && player.currentOrb != 1)
 				h += 1;
 			return std::max(h, GopEngine::distanceToAltar(orbs[0].location));
@@ -441,7 +441,7 @@ int GameState::getHeuristicCost(bool attractOnly) const
 		if (will1Score)
 		{
 			// Don't have to attract orb 1 again
-			h = getHeuristicCostSingleOrb(orbs[0], attractOnly);
+			h = getHeuristicCostSingleOrb(orbs[0]);
 			if (player.delayAttractFromPrototick && player.currentOrb != 0)
 				h += 1;
 			return std::max(h, GopEngine::distanceToAltar(orbs[1].location));

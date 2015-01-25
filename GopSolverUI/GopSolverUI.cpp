@@ -144,7 +144,7 @@ inline int clamp(int x, int minimum, int maximum)
 
 Point fromClientCoords(POINT pt)
 {
-	return Point(pt.x / cellSize - GRID_MAX, GRID_MAX - pt.y / cellSize);
+	return Point((int8_t)(pt.x / cellSize) - GRID_MAX, GRID_MAX - (int8_t)(pt.y / cellSize));
 }
 
 // Returns the upper-left corner of the client point.
@@ -161,7 +161,7 @@ void FillSquare(HDC hdc, Point p, HBRUSH hbr)
 	FillRect(hdc, &rc, hbr);
 }
 
-void FillSquare(HDC hdc, int x, int y, HBRUSH hbr)
+void FillSquare(HDC hdc, int8_t x, int8_t y, HBRUSH hbr)
 {
 	FillSquare(hdc, Point(x, y), hbr);
 }
@@ -169,8 +169,8 @@ void FillSquare(HDC hdc, int x, int y, HBRUSH hbr)
 void DrawGrid(HDC hdc, const RECT& rcClient)
 {
 	FillRect(hdc, &rcClient, blackBrush);
-	for (int y = -GRID_MAX; y <= GRID_MAX; ++y)
-		for (int x = -GRID_MAX; x <= GRID_MAX; ++x)
+	for (int8_t y = -GRID_MAX; y <= GRID_MAX; ++y)
+		for (int8_t x = -GRID_MAX; x <= GRID_MAX; ++x)
 			FillSquare(hdc, x, y, stateBrushes[(int)GopEngine::get(x, y)]);
 	for (size_t i = 0; i < gs.orbs.size(); ++i)
 		if (gs.orbs[i].location != Point::invalid)
@@ -178,9 +178,9 @@ void DrawGrid(HDC hdc, const RECT& rcClient)
 	FillSquare(hdc, gs.player.location, gs.player.action.getType() == GameActionType::Attract ? gs.player.currentOrb != -1 ? playerAttractingBrush : playerDraggingBrush : playerIdleBrush);
 
 	// Finally, mini-pillars and walls.
-	for (int y = -GRID_MAX; y <= GRID_MAX; ++y)
+	for (int8_t y = -GRID_MAX; y <= GRID_MAX; ++y)
 	{
-		for (int x = -GRID_MAX; x <= GRID_MAX; ++x)
+		for (int8_t x = -GRID_MAX; x <= GRID_MAX; ++x)
 		{
 			POINT p = toClientCoords(Point(x, y));
 			if (GopEngine::get(x, y) == Tile::MiniPillar1 || GopEngine::get(x, y) == Tile::MiniPillar2)
@@ -322,7 +322,7 @@ void DoSolve()
 {
 	gs.freeze();
 	int num;
-	auto nodes = Solver::solve(gs, false, &num, true);
+	auto nodes = Solver::solve(gs, &num, true);
 	solutions.clear();
 	for (const auto& node : nodes)
 		solutions.push_back(node->getPath());
@@ -389,14 +389,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wmId)
 		{
 		case IDB_BACK:
-			solutionPathIndex = clamp(solutionPathIndex - 1, 0, solutions[solutionIndex].size());
+			solutionPathIndex = clamp(solutionPathIndex - 1, 0, (int)solutions[solutionIndex].size());
 			break;
 		case IDB_PLAY:
 			LoadCurrentSolution();
 			SetPlaying(!isPlaying);
 			break;
 		case IDB_FORWARD:
-			solutionPathIndex = clamp(solutionPathIndex + 1, 0, solutions[solutionIndex].size());
+			solutionPathIndex = clamp(solutionPathIndex + 1, 0, (int)solutions[solutionIndex].size());
 			break;
 		case IDB_COPY:
 			CopyCurrentSolution();
@@ -428,7 +428,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 		Point p = fromClientCoords(pt);
 		bool b = false;
-		for (size_t i = 0; i < gs.orbs.size(); ++i)
+		for (int i = 0; i < gs.orbs.size(); ++i)
 		{
 			if (p == gs.orbs[i].location)
 			{

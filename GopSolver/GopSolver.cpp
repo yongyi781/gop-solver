@@ -113,12 +113,12 @@ void doReachable()
 	}
 }
 
-void benchmarkSolver(std::string altarFile, GameState state, bool attractOnly = false, bool debug = false)
+void benchmarkSolver(std::string altarFile, GameState state, bool debug = false)
 {
 	GopEngine::loadAltarFromFile(altarFile);
 	int numExpanded;
 	auto t = currentTime();
-	auto solutions = Solver::solve(state, attractOnly, &numExpanded, debug);
+	auto solutions = Solver::solve(state, &numExpanded, debug);
 	auto diff = currentTime() - t;
 	double diffMs = (double)diff.count() / 1000000;
 	if (solutions.size() == 0)
@@ -143,7 +143,7 @@ void testHeuristic(std::string altarFile, GameState state, std::string actionsSt
 		state.player.action = action;
 		state.step();
 		std::cout << std::setw(10) << action.toString()
-			<< " | Heuristic cost: " << 1 + i + state.getHeuristicCost(false)
+			<< " | Heuristic cost: " << 1 + i + state.getHeuristicCost()
 			<< std::endl;
 	}
 }

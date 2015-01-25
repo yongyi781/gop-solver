@@ -5,7 +5,7 @@
 
 int GameStateNode::getHeuristicCost() const
 {
-	return cost + state.getHeuristicCost(attractOnly);
+	return cost + state.getHeuristicCost();
 }
 
 std::deque<std::pair<GameState, GameAction>> GameStateNode::getPath() const
@@ -34,10 +34,29 @@ std::string GameStateNode::getActions(std::deque<std::pair<GameState, GameAction
 	return GameAction::formatActions(actions);
 }
 
-std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initialState, bool attractOnly, int* pNumExpanded, bool debug)
+typedef std::priority_queue<std::shared_ptr<GameStateNode>, std::vector<std::shared_ptr<GameStateNode>>, CompareNode> gamestate_queue;
+
+void addIfNotVisited(gamestate_queue& agenda, std::unordered_map<GameState, int>& visitedCosts, GameState state, GameAction action, std::shared_ptr<GameStateNode> parent = nullptr, int cost = 0, int numSteps = 0)
 {
-	std::priority_queue<std::shared_ptr<GameStateNode>, std::vector<std::shared_ptr<GameStateNode>>, CompareNode> agenda;
-	agenda.emplace(new GameStateNode(initialState, GameAction::idle(), attractOnly));
+	for (int i = 0; i < numSteps; i++)
+	{
+		state.player.action = action;
+		state.step();
+		// Update new attract
+		action = state.player.action;
+	}
+
+	if (visitedCosts.count(state) == 0 || visitedCosts[state] > cost)
+	{
+		visitedCosts[state] = cost;
+		agenda.emplace(new GameStateNode(state, action, parent, cost));
+	}
+}
+
+std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initialState, int* pNumExpanded, bool debug)
+{
+	gamestate_queue agenda;
+	agenda.emplace(new GameStateNode(initialState, GameAction::idle()));
 	std::unordered_map<GameState, int> visitedCosts;
 	int minCost = INT_MAX;
 	std::vector<std::shared_ptr<GameStateNode>> solutions;
@@ -72,10 +91,8 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 
 		auto orbs = node->state.orbs;
 
-		std::vector<std::shared_ptr<GameStateNode>> nodesToAdd;
-
 		// Idle for a tick
-		nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::idle(), attractOnly, node, node->cost + 1, 1));
+		addIfNotVisited(agenda, visitedCosts, node->state, GameAction::idle(), node, node->cost + 1, 1);
 
 		// If orbs are about to score, the rest of the actions should be idle.
 		if (!std::all_of(std::begin(orbs), std::end(orbs), [](const Orb& orb) { return GopEngine::willOrbScore(orb); }))
@@ -85,17 +102,15 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 				// If orb is about to score, don't need to touch it again!
 				if (!GopEngine::willOrbScore(orbs[i]))
 				{
-					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, false, false), attractOnly, node, node->cost + 1, 1));
-					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, false, false), attractOnly, node, node->cost + 1, 1));
-					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, false, true), attractOnly, node, node->cost + 1, 1));
-					nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, false, true), attractOnly, node, node->cost + 1, 1));
-					if (!attractOnly)
-					{
-						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, true, false), attractOnly, node, node->cost + 1, 1));
-						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, true, false), attractOnly, node, node->cost + 1, 1));
-						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, false, true, true), attractOnly, node, node->cost + 1, 1));
-						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::attract(i, true, true, true), attractOnly, node, node->cost + 1, 1));
-					}
+					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, false, false), node, node->cost + 1, 1);
+					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, false, false), node, node->cost + 1, 1);
+					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, false, true), node, node->cost + 1, 1);
+					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, false, true), node, node->cost + 1, 1);
+					// Repel variants
+					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, true, false), node, node->cost + 1, 1);
+					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, true, false), node, node->cost + 1, 1);
+					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, true, true), node, node->cost + 1, 1);
+					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, true, true), node, node->cost + 1, 1);
 				}
 			}
 
@@ -108,16 +123,7 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 			for (const Point& next : GopEngine::getNeighbors(node->state.player.location, PathMode::Player))
 				for (const Point& next2 : GopEngine::getNeighbors(next, PathMode::Player))
 					if (next2 != node->state.player.location)
-						nodesToAdd.emplace_back(new GameStateNode(node->state, GameAction::move(next2, toggleRun, changeWand), attractOnly, node, node->cost + 1, 1));
-		}
-
-		for (const auto& nodeToAdd : nodesToAdd)
-		{
-			if (visitedCosts.count(nodeToAdd->state) == 0 || visitedCosts[nodeToAdd->state] > nodeToAdd->cost)
-			{
-				visitedCosts[nodeToAdd->state] = nodeToAdd->cost;
-				agenda.push(nodeToAdd);
-			}
+						addIfNotVisited(agenda, visitedCosts, node->state, GameAction::move(next2, toggleRun, changeWand), node, node->cost + 1, 1);
 		}
 	}
 

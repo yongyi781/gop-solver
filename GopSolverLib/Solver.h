@@ -6,22 +6,9 @@
 class GameStateNode
 {
 public:
-	GameState state;
-	GameAction action;
-	std::shared_ptr<GameStateNode> parent;
-	int cost;
-	bool attractOnly;
-
-	GameStateNode(GameState state, GameAction action, bool attractOnly = false, std::shared_ptr<GameStateNode> parent = nullptr, int cost = 0, int numSteps = 0)
-		: state(state), action(action), parent(parent), cost(cost), attractOnly(attractOnly)
+	GameStateNode(GameState state, GameAction action, std::shared_ptr<GameStateNode> parent = nullptr, int cost = 0)
+		: state(state), action(action), parent(parent), cost(cost)
 	{
-		for (int i = 0; i < numSteps; i++)
-		{
-			this->state.player.action = action;
-			this->state.step();
-			// Update new attract
-			this->action = this->state.player.action;
-		}
 	}
 
 	int getHeuristicCost() const;
@@ -29,6 +16,11 @@ public:
 	std::string getActions() const;
 
 	static std::string getActions(std::deque<std::pair<GameState, GameAction>> path);
+
+	GameState state;
+	GameAction action;
+	std::shared_ptr<GameStateNode> parent;
+	int cost;
 };
 
 struct CompareNode : public std::binary_function<std::shared_ptr<GameStateNode>, std::shared_ptr<GameStateNode>, bool>
@@ -42,5 +34,5 @@ struct CompareNode : public std::binary_function<std::shared_ptr<GameStateNode>,
 class Solver
 {
 public:
-	static std::vector<std::shared_ptr<GameStateNode>> solve(const GameState& initialState, bool attractOnly = false, int* pNumExpanded = nullptr, bool debug = false);
+	static std::vector<std::shared_ptr<GameStateNode>> solve(const GameState& initialState, int* pNumExpanded = nullptr, bool debug = false);
 };

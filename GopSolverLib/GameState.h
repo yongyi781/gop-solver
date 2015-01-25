@@ -71,9 +71,9 @@ public:
 	void forceAttractNextTick(Player& player, int orbIndex);
 	void attractSuccess(Player& player, int orbIndex);
 	bool needsToMoveForOrb(const Orb & orb) const;
-	int getHeuristicCostSingleOrb(const Orb & orb, bool attractOnly) const;
+	int getHeuristicCostSingleOrb(const Orb & orb) const;
 	int getTwoTickHoldCost(int distances[], int currentOrb, bool prototick) const;
-	int getHeuristicCost(bool attractOnly) const;
+	int getHeuristicCost() const;
 
 	// Single player for now
 	Player player;

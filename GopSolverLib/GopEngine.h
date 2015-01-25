@@ -7,7 +7,7 @@
 enum class Tile { Floor, Wall, Rock, Water, PanelW, PanelS, PanelSW, MiniPillar1, MiniPillar2, Invalid };
 enum class PathMode { Sight, Orb, Player };
 
-inline bool isInRange(int x, int y) { return x >= -GRID_MAX && x <= GRID_MAX && y >= -GRID_MAX && y <= GRID_MAX; }
+inline bool isInRange(int8_t x, int8_t y) { return x >= -GRID_MAX && x <= GRID_MAX && y >= -GRID_MAX && y <= GRID_MAX; }
 inline bool isInRange(Point p) { return isInRange(p.x, p.y); }
 
 class GameStateNode;
@@ -15,7 +15,7 @@ class GameStateNode;
 class GopEngine
 {
 public:
-	static Tile get(int x, int y);
+	static Tile get(int8_t x, int8_t y);
 	static void clear();
 	static void loadAltar(const char* data);
 	static void loadAltarFromFile(std::string path);

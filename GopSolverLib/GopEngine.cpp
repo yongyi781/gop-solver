@@ -98,7 +98,7 @@ std::unordered_map<pair<Point, Point>, bool> reachabilityCache;
 std::unordered_map<pair<Point, Point>, int> distanceToReachableCache;
 std::unordered_map<pair<Point, Point>, deque<Point>> playerPathCache;
 
-Tile GopEngine::get(int x, int y)
+Tile GopEngine::get(int8_t x, int8_t y)
 {
 	return grid.get(x, y);
 }
@@ -454,9 +454,9 @@ deque<Point> GopEngine::getPlayerPath(Point p1, Point p2, bool clickOrb)
 string GopEngine::gridStr()
 {
 	ostringstream ostr;
-	for (int y = 0; y < GRID_SIZE; ++y)
+	for (int8_t y = 0; y < GRID_SIZE; ++y)
 	{
-		for (int x = 0; x < GRID_SIZE; ++x)
+		for (int8_t x = 0; x < GRID_SIZE; ++x)
 			ostr << (int)grid.get(x, y);
 		ostr << endl;
 	}
