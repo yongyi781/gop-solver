@@ -1,12 +1,13 @@
 #include "stdafx.h"
 #include "GopEngine.h"
+#include "hash.h"
 
 using namespace std;
 
-vector<Point> getLineOfSight(int x1, int y1, int x2, int y2)
+vector<Point> getLineOfSight(int8_t x1, int8_t y1, int8_t x2, int8_t y2)
 {
-	int distX = x2 - x1;
-	int distY = y2 - y1;
+	int8_t distX = x2 - x1;
+	int8_t distY = y2 - y1;
 	vector<Point> v;
 	if (distX == 0 && distY == 0)
 		return v;
@@ -22,17 +23,17 @@ vector<Point> getLineOfSight(int x1, int y1, int x2, int y2)
 	}
 	else if (distX == 0)
 	{
-		for (int y = y1; y <= y2; y++)
+		for (int8_t y = y1; y <= y2; y++)
 			v.push_back(Point(x1, y));
 	}
 	else if (distY == 0)
 	{
-		for (int x = x1; x <= x2; x++)
+		for (int8_t x = x1; x <= x2; x++)
 			v.push_back(Point(x, y1));
 	}
 	else if (distX == distY)
 	{
-		for (int x = x1, y = y1; x <= x2, y <= y2; x++, y++)
+		for (int8_t x = x1, y = y1; x <= x2, y <= y2; x++, y++)
 			v.push_back(Point(x, y));
 	}
 	else if (abs(distY) > abs(distX))
@@ -51,9 +52,9 @@ vector<Point> getLineOfSight(int x1, int y1, int x2, int y2)
 	else    // First octant
 	{
 		v.push_back(Point(x1, y1));
-		int x = x1 + 1;
-		int y = y1;
-		int error = distX / 2;
+		int8_t x = x1 + 1;
+		int8_t y = y1;
+		int8_t error = distX / 2;
 		while (x <= x2)
 		{
 			v.push_back(Point(x, y));
@@ -112,9 +113,9 @@ void GopEngine::calculateTables()
 	for (int i = 0; i < 3; ++i)
 	{
 		neighbors[i].clear();
-		for (int y = -GRID_MAX; y <= GRID_MAX; y++)
+		for (int8_t y = -GRID_MAX; y <= GRID_MAX; y++)
 		{
-			for (int x = -GRID_MAX; x <= GRID_MAX; x++)
+			for (int8_t x = -GRID_MAX; x <= GRID_MAX; x++)
 			{
 				Point p = Point(x, y);
 				for (const Point& offset : Point::offsets)
@@ -204,19 +205,9 @@ bool GopEngine::canMoveWest(Point p, PathMode mode)
 	return isInRange(p) && isInRange(p + Point::west) && isPassable(p, mode) && isPassable(p + Point::west, mode) && grid[p] != Tile::PanelW && grid[p] != Tile::PanelSW;
 }
 
-bool GopEngine::canMoveWest(int x, int y, PathMode mode)
-{
-	return canMoveWest(Point(x, y), mode);
-}
-
 bool GopEngine::canMoveSouth(Point p, PathMode mode)
 {
 	return isInRange(p) && isInRange(p + Point::south) && isPassable(p, mode) && isPassable(p + Point::south, mode) && grid[p] != Tile::PanelS && grid[p] != Tile::PanelSW;
-}
-
-bool GopEngine::canMoveSouth(int x, int y, PathMode mode)
-{
-	return canMoveSouth(Point(x, y), mode);
 }
 
 // d.x and d.y must be no more than 1 in absolute value.
@@ -228,8 +219,8 @@ bool GopEngine::canMove(Point p, Point d, PathMode mode, bool calculate)
 		return find(begin(v), end(v), p + d) != v.end();
 	}
 
-	int ddx = d.x == 1 ? 1 : 0;
-	int ddy = d.y == 1 ? 1 : 0;
+	int8_t ddx = d.x == 1 ? 1 : 0;
+	int8_t ddy = d.y == 1 ? 1 : 0;
 
 	Tile old = grid[p];
 	if (!isPassable(p, mode))
@@ -237,48 +228,51 @@ bool GopEngine::canMove(Point p, Point d, PathMode mode, bool calculate)
 
 	bool result = true;
 	if (d.y == 0)
-		result = canMoveWest(p.x + ddx, p.y, mode);
+		result = canMoveWest({ p.x + ddx, p.y }, mode);
 	else if (d.x == 0)
-		result = canMoveSouth(p.x, p.y + ddy, mode);
+		result = canMoveSouth({ p.x, p.y + ddy }, mode);
 	else if (mode == PathMode::Sight)
 	{
-		if ((!canMoveWest(p.x + ddx, p.y + ddy, mode) && !canMoveWest(p.x + ddx, p.y + ddy - 1, mode)) ||
-			(!canMoveSouth(p.x + ddx, p.y + ddy, mode) && !canMoveSouth(p.x + ddx - 1, p.y + ddy, mode)))
+		if ((!canMoveWest({ p.x + ddx, p.y + ddy }, mode) && !canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode)) ||
+			(!canMoveSouth({ p.x + ddx, p.y + ddy }, mode) && !canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode)))
 			result = false;
 		else if (d.x == d.y)
-			result = !((!canMoveWest(p.x + ddx, p.y + ddy, mode) && !canMoveSouth(p.x + ddx, p.y + ddy, mode)) ||
-			(!canMoveWest(p.x + ddx, p.y + ddy - 1, mode) && !canMoveSouth(p.x + ddx - 1, p.y + ddy, mode)));
+			result = !((!canMoveWest({ p.x + ddx, p.y + ddy }, mode) && !canMoveSouth({ p.x + ddx, p.y + ddy }, mode)) ||
+			(!canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode) && !canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode)));
 		else
-			result = !((!canMoveWest(p.x + ddx, p.y + ddy, mode) && !canMoveSouth(p.x + ddx - 1, p.y + ddy, mode)) ||
-			(!canMoveWest(p.x + ddx, p.y + ddy - 1, mode) && !canMoveSouth(p.x + ddx, p.y + ddy, mode)));
+			result = !((!canMoveWest({ p.x + ddx, p.y + ddy }, mode) && !canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode)) ||
+			(!canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode) && !canMoveSouth({ p.x + ddx, p.y + ddy }, mode)));
 	}
 	else
 	{
 		if ((d.x == -d.y && get(p.x + ddx, p.y + ddy) == Tile::MiniPillar1) || (d.x == d.y && get(p.x + ddx, p.y + ddy) == Tile::MiniPillar2))
 			result = false;
 		else
-			result = canMoveWest(p.x + ddx, p.y + ddy, mode) && canMoveWest(p.x + ddx, p.y + ddy - 1, mode) && canMoveSouth(p.x + ddx, p.y + ddy, mode) && canMoveSouth(p.x + ddx - 1, p.y + ddy, mode);
+			result = canMoveWest({ p.x + ddx, p.y + ddy }, mode)
+					&& canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode)
+					&& canMoveSouth({ p.x + ddx, p.y + ddy }, mode)
+					&& canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode);
 	}
 
 	grid[p] = old;
 	return result;
 }
 
-inline int sign(int x)
+inline int8_t sign(int8_t x)
 {
 	return x == 0 ? 0 : x > 0 ? 1 : -1;
 }
 
 // Returns the value that is smaller in absolute value.
-inline int absmin(int x, int y) {
+inline int8_t absmin(int8_t x, int8_t y) {
 	return abs(x) < abs(y) ? x : y;
 }
 
 // Returns the orb offset from a player click.
 Point GopEngine::getOrbOffset(Point diff, bool toPlayer) {
 	double m = abs((double)diff.y / diff.x);
-	int dx = sign(diff.x);
-	int dy = sign(diff.y);
+	int8_t dx = sign(diff.x);
+	int8_t dy = sign(diff.y);
 	Point result;
 	if (m > 2)
 		result = Point(0, 2 * dy);
@@ -299,8 +293,8 @@ Point GopEngine::nextOrbLocation(Point location, Point target)
 		return location;
 
 	Point orbOffset = target - location;
-	int dx = sign(orbOffset.x);
-	int dy = sign(orbOffset.y);
+	int8_t dx = sign(orbOffset.x);
+	int8_t dy = sign(orbOffset.y);
 	Point offset{ dx, dy };
 	if (!GopEngine::canMove(location, Point(dx, dy), PathMode::Orb))
 	{

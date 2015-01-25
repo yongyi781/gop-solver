@@ -32,8 +32,7 @@ bool Player::operator==(const Player & other) const
 		&& delayAttractFromMoving == other.delayAttractFromMoving
 		&& delayAttractFromPrototick == other.delayAttractFromPrototick
 		&& isAttracting == other.isAttracting
-		&& forceAttractOrb == other.forceAttractOrb
-		&& holdLength == other.holdLength;
+		&& forceAttractOrb == other.forceAttractOrb;
 }
 
 void Player::stopAttracting()
@@ -95,17 +94,17 @@ bool GameState::operator!=(const GameState & other) const
 	return !(*this == other);
 }
 
-inline int sign(int x)
+inline int8_t sign(int8_t x)
 {
 	return x == 0 ? 0 : x > 0 ? 1 : -1;
 }
 
 Point getTwoSquareOffset(Point diff)
 {
-	int dx = sign(diff.x);
-	int dy = sign(diff.y);
-	int absx = abs(diff.x);
-	int absy = abs(diff.y);
+	int8_t dx = sign(diff.x);
+	int8_t dy = sign(diff.y);
+	int8_t absx = static_cast<int8_t>(abs(diff.x));
+	int8_t absy = static_cast<int8_t>(abs(diff.y));
 
 	Point result;
 	if (absx == 0 || absy == 0 || absx == absy)
@@ -481,36 +480,4 @@ int GameState::getHeuristicCost(bool attractOnly) const
 	}
 
 	return h;
-}
-
-namespace std
-{
-	size_t hash<GameAction>::operator()(const GameAction& action) const
-	{
-		return action.hash();
-	}
-
-	size_t hash<Orb>::operator()(const Orb& orb) const
-	{
-		return hash<Point>()(orb.location) + 31 * (31 + hash<Point>()(orb.target));
-	}
-
-	size_t hash<Player>::operator()(const Player& player) const
-	{
-		return hash<Point>()(player.location) + 31 * (
-			31 + hash<int>()(player.currentOrb) + 31 * (
-			31 + hash<bool>()(player.delayAttractFromMoving) + 31 * (
-			31 + hash<bool>()(player.delayAttractFromPrototick) + 31 * (
-			31 + hash<bool>()(player.isAttracting) + 31 * (
-			31 + hash<int>()(player.forceAttractOrb) + 31 * (
-			31 + hash<int>()(player.holdLength)))))));
-	}
-
-	size_t hash<GameState>::operator()(const GameState& s) const
-	{
-		size_t h = hash<Player>()(s.player);
-		for (auto& orb : s.orbs)
-			h = (h + 31) * 31 + hash<Orb>()(orb);
-		return h;
-	}
 }

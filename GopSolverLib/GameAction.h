@@ -13,15 +13,7 @@ public:
 	static GameAction move(Point location, bool toggleRun = false, bool changeWand = false) { return GameAction(GameActionType::Move, location, 0, toggleRun, changeWand); }
 	static GameAction attract(int orbIndex, bool toggleRun = false, bool changeWand = false, bool isNewAttract = true) { return GameAction(GameActionType::Attract, Point::invalid, orbIndex, toggleRun, changeWand, isNewAttract); }
 
-	bool operator==(const GameAction& other) const
-	{
-		return type == other.type
-			&& location == other.location
-			&& orbIndex == other.orbIndex
-			&& toggleRun == other.toggleRun
-			&& changeWand == other.changeWand
-			&& newAttract == other.newAttract;
-	}
+	bool operator==(const GameAction& other) const;
 
 	GameActionType getType() const { return type; }
 	Point getLocation() const { return location; }
@@ -30,27 +22,11 @@ public:
 	bool getChangeWand() const { return changeWand; }
 	bool isNewAttract() const { return newAttract; }
 
-	GameAction copy(bool discardSettings = false) const
-	{
-		if (discardSettings)
-			return GameAction(type, location, orbIndex);
-		return GameAction(type, location, orbIndex, toggleRun, changeWand, newAttract);
-	}
+	GameAction copy(bool discardSettings = false) const;
 
-	GameAction copyWithSettings(bool toggleRun, bool changeWand, bool newAttract) const
-	{
-		return GameAction(type, location, orbIndex, toggleRun, changeWand, newAttract);
-	}
+	GameAction copyWithSettings(bool toggleRun, bool changeWand, bool newAttract) const;
 
-	size_t hash() const
-	{
-		return std::hash<GameActionType>()(type) + 31 * (
-			31 + std::hash<Point>()(location) + 31 * (
-			31 + std::hash<int>()(orbIndex) + 31 * (
-			31 + std::hash<bool>()(toggleRun) + 31 * (
-			31 + std::hash<bool>()(changeWand) + 31 * (
-			31 + std::hash<bool>()(newAttract))))));
-	}
+	size_t hash() const;
 
 	std::string toString() const;
 
@@ -66,14 +42,7 @@ private:
 	}
 
 	// actionStr is either -, (a,b), A, B, or C.
-	static std::string formatActionWithCount(std::string actionStr, int count)
-	{
-		std::string str1;
-		for (int i = 0; i < count; i++)
-			str1 += actionStr;
-		std::string str2 = actionStr + "[" + std::to_string(count) + "]";
-		return str1.size() < str2.size() ? str1 : str2;
-	}
+	static std::string formatActionWithCount(std::string actionStr, int count);
 
 	GameActionType type;
 	Point location;

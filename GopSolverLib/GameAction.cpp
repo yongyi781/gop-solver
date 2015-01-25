@@ -1,6 +1,28 @@
 #include "stdafx.h"
 #include "GameAction.h"
 
+bool GameAction::operator==(const GameAction & other) const
+{
+	return type == other.type
+		&& location == other.location
+		&& orbIndex == other.orbIndex
+		&& toggleRun == other.toggleRun
+		&& changeWand == other.changeWand
+		&& newAttract == other.newAttract;
+}
+
+GameAction GameAction::copy(bool discardSettings) const
+{
+	if (discardSettings)
+		return GameAction(type, location, orbIndex);
+	return GameAction(type, location, orbIndex, toggleRun, changeWand, newAttract);
+}
+
+GameAction GameAction::copyWithSettings(bool toggleRun, bool changeWand, bool newAttract) const
+{
+	return GameAction(type, location, orbIndex, toggleRun, changeWand, newAttract);
+}
+
 std::string GameAction::toString() const
 {
 	std::string str;
@@ -126,4 +148,13 @@ std::deque<GameAction> GameAction::parseActions(std::string str)
 		}
 	}
 	return actions;
+}
+
+std::string GameAction::formatActionWithCount(std::string actionStr, int count)
+{
+	std::string str1;
+	for (int i = 0; i < count; i++)
+		str1 += actionStr;
+	std::string str2 = actionStr + "[" + std::to_string(count) + "]";
+	return str1.size() < str2.size() ? str1 : str2;
 }

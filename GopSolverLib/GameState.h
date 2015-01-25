@@ -79,26 +79,3 @@ public:
 	Player player;
 	std::vector<Orb> orbs;
 };
-
-namespace std
-{
-	template<> struct hash<GameAction>
-	{
-		size_t operator()(const GameAction& action) const;
-	};
-
-	template<> struct hash<Orb>
-	{
-		size_t operator()(const Orb& orb) const;
-	};
-
-	template<> struct hash<Player>
-	{
-		size_t operator()(const Player& player) const;
-	};
-
-	template<> struct hash<GameState>
-	{
-		size_t operator()(const GameState& s) const;
-	};
-}

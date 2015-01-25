@@ -227,6 +227,7 @@
     <ClInclude Include="GameState.h" />
     <ClInclude Include="GopArray.h" />
     <ClInclude Include="GopEngine.h" />
+    <ClInclude Include="hash.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Solver.h" />
     <ClInclude Include="stdafx.h" />
@@ -236,6 +237,7 @@
     <ClCompile Include="GameAction.cpp" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="GopEngine.cpp" />
+    <ClCompile Include="hash.cpp" />
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="Solver.cpp" />
     <ClCompile Include="stdafx.cpp">

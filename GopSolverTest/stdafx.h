@@ -14,3 +14,4 @@
 #include <algorithm>
 #include "../GopSolverLib/GameState.h"
 #include "../GopSolverLib/GopEngine.h"
+#include "../GopSolverLib/hash.h"

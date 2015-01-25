@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Solver.h"
+#include "hash.h"
 #include "GopEngine.h"
 
 int GameStateNode::getHeuristicCost() const

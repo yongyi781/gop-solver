@@ -21,9 +21,7 @@ public:
 	static void loadAltarFromFile(std::string path);
 	static bool isPassable(Point p, PathMode mode);
 	static bool canMoveWest(Point p, PathMode mode);
-	static bool canMoveWest(int x, int y, PathMode mode);
 	static bool canMoveSouth(Point p, PathMode mode);
-	static bool canMoveSouth(int x, int y, PathMode mode);
 	static bool canMove(Point p, Point d, PathMode mode, bool calculate = false);
 	static Point getOrbOffset(Point diff, bool toPlayer = false);
 	static Point nextOrbLocation(Point location, Point target);
