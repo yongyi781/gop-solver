@@ -54,8 +54,8 @@ namespace std
 		result = PRIME * (result + hash<int>()(player.currentOrb));
 		result = PRIME * (result + hash<bool>()(player.delayAttractFromMoving));
 		result = PRIME * (result + hash<bool>()(player.delayAttractFromPrototick));
-		result = PRIME * (result + hash<bool>()(player.isAttracting));
 		result = PRIME * (result + hash<int>()(player.forceAttractOrb));
+		result = PRIME * (result + hash<uint8_t>()(std::min((uint8_t)2, player.holdLength)));
 		return result;
 	}
 

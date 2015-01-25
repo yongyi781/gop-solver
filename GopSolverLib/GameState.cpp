@@ -31,8 +31,8 @@ bool Player::operator==(const Player & other) const
 		&& currentOrb == other.currentOrb
 		&& delayAttractFromMoving == other.delayAttractFromMoving
 		&& delayAttractFromPrototick == other.delayAttractFromPrototick
-		&& isAttracting == other.isAttracting
-		&& forceAttractOrb == other.forceAttractOrb;
+		&& forceAttractOrb == other.forceAttractOrb
+		&& std::min((uint8_t)2, holdLength) == std::min((uint8_t)2, other.holdLength);
 }
 
 void Player::stopAttracting()

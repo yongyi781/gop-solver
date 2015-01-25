@@ -38,7 +38,7 @@ public:
 	std::deque<Point> movePath;
 	bool isAttracting = false;
 	int forceAttractOrb = -1;
-	int holdLength = 0;
+	uint8_t holdLength = 0;
 	// The below are not tested for in equality.
 	// To prevent moving twice
 	bool hasMovedThisTick = false;
