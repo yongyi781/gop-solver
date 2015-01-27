@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Solver.h"
 #include "hash.h"
-#include "GopEngine.h"
+#include "GopBoard.h"
 
 int GameStateNode::getHeuristicCost() const
 {
@@ -78,7 +78,7 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 			break;
 
 		// If the orb target is adjacent to altar, then the orb will go into the altar for sure.
-		if (GopEngine::isStateInGoal(node->state))
+		if (GopBoard::isStateInGoal(node->state))
 		{
 			if (minCost >= node->cost)
 			{
@@ -95,12 +95,12 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 		addIfNotVisited(agenda, visitedCosts, node->state, GameAction::idle(), node, node->cost + 1, 1);
 
 		// If orbs are about to score, the rest of the actions should be idle.
-		if (!std::all_of(std::begin(orbs), std::end(orbs), [](const Orb& orb) { return GopEngine::willOrbScore(orb); }))
+		if (!std::all_of(std::begin(orbs), std::end(orbs), [](const Orb& orb) { return GopBoard::willOrbScore(orb); }))
 		{
 			for (int i = 0; i < (int)orbs.size(); ++i)
 			{
 				// If orb is about to score, don't need to touch it again!
-				if (!GopEngine::willOrbScore(orbs[i]))
+				if (!GopBoard::willOrbScore(orbs[i]))
 				{
 					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, false, false), node, node->cost + 1, 1);
 					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, false, false), node, node->cost + 1, 1);
@@ -120,8 +120,8 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 			bool toggleRun = !node->state.player.run;
 			// Change wand if repelling
 			bool changeWand = node->state.player.repel;
-			for (const Point& next : GopEngine::getNeighbors(node->state.player.location, PathMode::Player))
-				for (const Point& next2 : GopEngine::getNeighbors(next, PathMode::Player))
+			for (const Point& next : GopBoard::getNeighbors(node->state.player.location, PathMode::Player))
+				for (const Point& next2 : GopBoard::getNeighbors(next, PathMode::Player))
 					if (next2 != node->state.player.location)
 						addIfNotVisited(agenda, visitedCosts, node->state, GameAction::move(next2, toggleRun, changeWand), node, node->cost + 1, 1);
 		}

@@ -5,7 +5,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace GopSolverTest
 {
-	TEST_CLASS(GopEngineTests)
+	TEST_CLASS(GopBoardTests)
 	{
 	public:
 		static std::string airAltarFile;
@@ -19,31 +19,31 @@ namespace GopSolverTest
 
 		TEST_METHOD_INITIALIZE(InitializeMethods)
 		{
-			GopEngine::loadAltarFromFile(mindAltarFile);
+			GopBoard::loadAltarFromFile(mindAltarFile);
 		}
 
 		TEST_METHOD(DistanceToReachableWorksCorrectly)
 		{
-			Assert::AreEqual(2, GopEngine::distanceToReachable({ 0, -2 }, { 12, -10 }));
-			Assert::AreEqual(13, GopEngine::distanceToReachable({ 0, -2 }, { -16, 1 }));
+			Assert::AreEqual(2, GopBoard::distanceToReachable({ 0, -2 }, { 12, -10 }));
+			Assert::AreEqual(13, GopBoard::distanceToReachable({ 0, -2 }, { -16, 1 }));
 		}
 
 		TEST_METHOD(DistanceToPointWorksCorrectly)
 		{
-			Assert::AreEqual(0, GopEngine::distanceToPoint({ 0, -2 }, { 0, -2 }));
-			Assert::AreEqual(1, GopEngine::distanceToPoint({ 0, -2 }, { 1, -2 }));
-			Assert::AreEqual(2, GopEngine::distanceToPoint({ 0, -2 }, { 2, -2 }));
-			Assert::AreEqual(13, GopEngine::distanceToPoint({ 0, -2 }, { -9, -10 }));
-			Assert::AreEqual(-1, GopEngine::distanceToPoint({ 0, -2 }, { 13, 7 }));
+			Assert::AreEqual(0, GopBoard::distanceToPoint({ 0, -2 }, { 0, -2 }));
+			Assert::AreEqual(1, GopBoard::distanceToPoint({ 0, -2 }, { 1, -2 }));
+			Assert::AreEqual(2, GopBoard::distanceToPoint({ 0, -2 }, { 2, -2 }));
+			Assert::AreEqual(13, GopBoard::distanceToPoint({ 0, -2 }, { -9, -10 }));
+			Assert::AreEqual(-1, GopBoard::distanceToPoint({ 0, -2 }, { 13, 7 }));
 		}
 
 		TEST_METHOD(GetPlayerPathWorksCorrectly)
 		{
-			GopEngine::loadAltarFromFile(airAltarFile);
-			auto path1 = GopEngine::getPlayerPath({ 2, 0 }, { -7, 0 });
-			auto path2 = GopEngine::getPlayerPath({ 2, 0 }, { 2, -1 });
-			auto path3 = GopEngine::getPlayerPath({ 2, 0 }, { -3, -7 }, true);
-			auto path4 = GopEngine::getPlayerPath({ 0, -2 }, { 7,-16 }, true);
+			GopBoard::loadAltarFromFile(airAltarFile);
+			auto path1 = GopBoard::getPlayerPath({ 2, 0 }, { -7, 0 });
+			auto path2 = GopBoard::getPlayerPath({ 2, 0 }, { 2, -1 });
+			auto path3 = GopBoard::getPlayerPath({ 2, 0 }, { -3, -7 }, true);
+			auto path4 = GopBoard::getPlayerPath({ 0, -2 }, { 7,-16 }, true);
 
 			std::deque<Point> expectedPath1 =
 			{
@@ -75,6 +75,6 @@ namespace GopSolverTest
 		}
 	};
 
-	std::string GopEngineTests::airAltarFile;
-	std::string GopEngineTests::mindAltarFile;
+	std::string GopBoardTests::airAltarFile;
+	std::string GopBoardTests::mindAltarFile;
 }

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "GopEngine.h"
+#include "GopBoard.h"
 #include "hash.h"
 
 using namespace std;
@@ -90,22 +90,21 @@ vector<Point> getLineOfSight(int8_t x1, int8_t y1, int8_t x2, int8_t y2)
 	return v;
 }
 
-GopArray<Tile> GopEngine::grid;
-GopArray<vector<Point>> GopEngine::neighbors[3];
-GopArray<int> GopEngine::distancesToAltarTable;
+GopArray<Tile> GopBoard::grid;
+GopArray<vector<Point>> GopBoard::neighbors[3];
+GopArray<int> GopBoard::distancesToAltarTable;
 std::unordered_map<GameState, vector<shared_ptr<GameStateNode>>> solutionCache;
 std::unordered_map<pair<Point, Point>, bool> reachabilityCache;
 std::unordered_map<pair<Point, Point>, int> distanceToReachableCache;
 std::unordered_map<pair<Point, Point>, deque<Point>> playerPathCache;
 
-Tile GopEngine::get(int8_t x, int8_t y)
+Tile GopBoard::get(int8_t x, int8_t y)
 {
 	return grid.get(x, y);
 }
 
-void GopEngine::calculateTables()
+void GopBoard::calculateTables()
 {
-	solutionCache.clear();
 	reachabilityCache.clear();
 	distanceToReachableCache.clear();
 	playerPathCache.clear();
@@ -155,13 +154,13 @@ void GopEngine::calculateTables()
 	}
 }
 
-void GopEngine::clear()
+void GopBoard::clear()
 {
 	grid.clear();
 	calculateTables();
 }
 
-void GopEngine::loadAltar(const char* data)
+void GopBoard::loadAltar(const char* data)
 {
 	int x = 0, y = 0;
 	for (int i = 0; data[i]; ++i)
@@ -178,7 +177,7 @@ void GopEngine::loadAltar(const char* data)
 	calculateTables();
 }
 
-void GopEngine::loadAltarFromFile(string path)
+void GopBoard::loadAltarFromFile(string path)
 {
 	ifstream fin(path);
 	char c;
@@ -195,23 +194,23 @@ void GopEngine::loadAltarFromFile(string path)
 	calculateTables();
 }
 
-bool GopEngine::isPassable(Point p, PathMode mode)
+bool GopBoard::isPassable(Point p, PathMode mode)
 {
 	return grid[p] != Tile::Wall && (mode < PathMode::Orb || grid[p] != Tile::Rock) && (mode < PathMode::Player || grid[p] != Tile::Water);
 }
 
-bool GopEngine::canMoveWest(Point p, PathMode mode)
+bool GopBoard::canMoveWest(Point p, PathMode mode)
 {
 	return isInRange(p) && isInRange(p + Point::west) && isPassable(p, mode) && isPassable(p + Point::west, mode) && grid[p] != Tile::PanelW && grid[p] != Tile::PanelSW;
 }
 
-bool GopEngine::canMoveSouth(Point p, PathMode mode)
+bool GopBoard::canMoveSouth(Point p, PathMode mode)
 {
 	return isInRange(p) && isInRange(p + Point::south) && isPassable(p, mode) && isPassable(p + Point::south, mode) && grid[p] != Tile::PanelS && grid[p] != Tile::PanelSW;
 }
 
 // d.x and d.y must be no more than 1 in absolute value.
-bool GopEngine::canMove(Point p, Point d, PathMode mode, bool calculate)
+bool GopBoard::canMove(Point p, Point d, PathMode mode, bool calculate)
 {
 	if (!calculate)
 	{
@@ -269,7 +268,7 @@ inline int8_t absmin(int8_t x, int8_t y) {
 }
 
 // Returns the orb offset from a player click.
-Point GopEngine::getOrbOffset(Point diff, bool toPlayer) {
+Point GopBoard::getOrbOffset(Point diff, bool toPlayer) {
 	double m = abs((double)diff.y / diff.x);
 	int8_t dx = sign(diff.x);
 	int8_t dy = sign(diff.y);
@@ -287,7 +286,7 @@ Point GopEngine::getOrbOffset(Point diff, bool toPlayer) {
 	return toPlayer ? Point(absmin(result.x, diff.x - dx), absmin(result.y, diff.y - dy)) : result;
 }
 
-Point GopEngine::nextOrbLocation(Point location, Point target)
+Point GopBoard::nextOrbLocation(Point location, Point target)
 {
 	if (target == Point::invalid)
 		return location;
@@ -296,11 +295,11 @@ Point GopEngine::nextOrbLocation(Point location, Point target)
 	int8_t dx = sign(orbOffset.x);
 	int8_t dy = sign(orbOffset.y);
 	Point offset{ dx, dy };
-	if (!GopEngine::canMove(location, Point(dx, dy), PathMode::Orb))
+	if (!GopBoard::canMove(location, Point(dx, dy), PathMode::Orb))
 	{
-		if (GopEngine::canMove(location, Point(dx, 0), PathMode::Orb))
+		if (GopBoard::canMove(location, Point(dx, 0), PathMode::Orb))
 			offset = Point(dx, 0);
-		else if (GopEngine::canMove(location, Point(0, dy), PathMode::Orb))
+		else if (GopBoard::canMove(location, Point(0, dy), PathMode::Orb))
 			offset = Point(0, dy);
 		else
 			offset = Point::zero;
@@ -309,7 +308,7 @@ Point GopEngine::nextOrbLocation(Point location, Point target)
 	return location + offset;
 }
 
-bool GopEngine::canReach(Point p1, Point p2, bool repel)
+bool GopBoard::canReach(Point p1, Point p2, bool repel)
 {
 	if (p1 == p2 || p1.walkingDistanceTo(p2) > (repel ? MAX_REPEL_REACH_DISTANCE : MAX_REACH_DISTANCE))
 		return false;
@@ -330,12 +329,12 @@ bool GopEngine::canReach(Point p1, Point p2, bool repel)
 	return true;
 }
 
-int GopEngine::distanceToAltar(Point p)
+int GopBoard::distanceToAltar(Point p)
 {
 	return distancesToAltarTable[p];
 }
 
-int GopEngine::distanceToPoint(Point p1, Point p2)
+int GopBoard::distanceToPoint(Point p1, Point p2)
 {
 	const auto& path = getPlayerPath(p1, p2);
 	if (path.empty() || path.back() == p2)
@@ -343,7 +342,7 @@ int GopEngine::distanceToPoint(Point p1, Point p2)
 	return -1;
 }
 
-int GopEngine::distanceToReachable(Point p1, Point p2, bool repel)
+int GopBoard::distanceToReachable(Point p1, Point p2, bool repel)
 {
 	if (p1 == p2)
 		return 1;	// Must move away from orb!
@@ -380,12 +379,12 @@ int GopEngine::distanceToReachable(Point p1, Point p2, bool repel)
 	return std::numeric_limits<int>::max();
 }
 
-bool GopEngine::isAdjacentToAltar(Point p)
+bool GopBoard::isAdjacentToAltar(Point p)
 {
 	return p.x >= -2 && p.x <= 2 && p.y >= -2 && p.y <= 2;
 }
 
-deque<Point> GopEngine::getPlayerPath(Point p1, Point p2, bool clickOrb)
+deque<Point> GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 {
 	if (p1 == p2)
 	{
@@ -451,7 +450,7 @@ deque<Point> GopEngine::getPlayerPath(Point p1, Point p2, bool clickOrb)
 	return path;
 };
 
-string GopEngine::gridStr()
+string GopBoard::gridStr()
 {
 	ostringstream ostr;
 	for (int8_t y = 0; y < GRID_SIZE; ++y)
@@ -463,7 +462,7 @@ string GopEngine::gridStr()
 	return ostr.str();
 }
 
-bool GopEngine::willOrbScore(const Orb& orb)
+bool GopBoard::willOrbScore(const Orb& orb)
 {
 	Point location = orb.location;
 	for (int i = 0; i < 4; i++)
@@ -476,12 +475,12 @@ bool GopEngine::willOrbScore(const Orb& orb)
 	return false;
 }
 
-const std::vector<Point>& GopEngine::getNeighbors(Point p, PathMode mode)
+const std::vector<Point>& GopBoard::getNeighbors(Point p, PathMode mode)
 {
 	return neighbors[(int)mode][p];
 }
 
-bool GopEngine::isStateInGoal(const GameState& s)
+bool GopBoard::isStateInGoal(const GameState& s)
 {
 	for (const Orb& orb : s.orbs)
 		if (!isAdjacentToAltar(orb.location))

@@ -13,5 +13,5 @@
 #include <vector>
 #include <algorithm>
 #include "../GopSolverLib/GameState.h"
-#include "../GopSolverLib/GopEngine.h"
+#include "../GopSolverLib/GopBoard.h"
 #include "../GopSolverLib/hash.h"

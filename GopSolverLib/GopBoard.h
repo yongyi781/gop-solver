@@ -12,7 +12,7 @@ inline bool isInRange(Point p) { return isInRange(p.x, p.y); }
 
 class GameStateNode;
 
-class GopEngine
+class GopBoard
 {
 public:
 	static Tile get(int8_t x, int8_t y);

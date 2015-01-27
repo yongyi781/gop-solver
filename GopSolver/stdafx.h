@@ -21,5 +21,5 @@
 #include <set>
 #include <tuple>
 #include <functional>
-#include <Windows.h>
+#include <thread>
 #include "..\GopSolverLib\Solver.h"

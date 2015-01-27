@@ -171,7 +171,7 @@ void DrawGrid(HDC hdc, const RECT& rcClient)
 	FillRect(hdc, &rcClient, blackBrush);
 	for (int8_t y = -GRID_MAX; y <= GRID_MAX; ++y)
 		for (int8_t x = -GRID_MAX; x <= GRID_MAX; ++x)
-			FillSquare(hdc, x, y, stateBrushes[(int)GopEngine::get(x, y)]);
+			FillSquare(hdc, x, y, stateBrushes[(int)GopBoard::get(x, y)]);
 	for (size_t i = 0; i < gs.orbs.size(); ++i)
 		if (gs.orbs[i].location != Point::invalid)
 			FillSquare(hdc, gs.orbs[i].location, gs.player.currentOrb == (int)i && gs.orbs[i].target != Point::invalid ? orbHighlightBrush : orbBrush);
@@ -183,19 +183,19 @@ void DrawGrid(HDC hdc, const RECT& rcClient)
 		for (int8_t x = -GRID_MAX; x <= GRID_MAX; ++x)
 		{
 			POINT p = toClientCoords(Point(x, y));
-			if (GopEngine::get(x, y) == Tile::MiniPillar1 || GopEngine::get(x, y) == Tile::MiniPillar2)
+			if (GopBoard::get(x, y) == Tile::MiniPillar1 || GopBoard::get(x, y) == Tile::MiniPillar2)
 			{
 				RECT rc = { p.x - 3, p.y + cellSize - 3, p.x + 2, p.y + cellSize + 2 };
 				FillRect(hdc, &rc, blackBrush);
 			}
 			else
 			{
-				if (GopEngine::get(x, y) == Tile::PanelW || GopEngine::get(x, y) == Tile::PanelSW)
+				if (GopBoard::get(x, y) == Tile::PanelW || GopBoard::get(x, y) == Tile::PanelSW)
 				{
 					RECT rc = { p.x - 2, p.y, p.x + 1, p.y + cellSize };
 					FillRect(hdc, &rc, blackBrush);
 				}
-				if (GopEngine::get(x, y) == Tile::PanelS || GopEngine::get(x, y) == Tile::PanelSW)
+				if (GopBoard::get(x, y) == Tile::PanelS || GopBoard::get(x, y) == Tile::PanelSW)
 				{
 					RECT rc = { p.x, p.y + cellSize - 2, p.x + cellSize, p.y + cellSize + 1 };
 					FillRect(hdc, &rc, blackBrush);
@@ -255,7 +255,7 @@ void SetCurrentAltar(HWND hWnd, int id)
 {
 	const char* data;
 	LoadFileInResource(id, _T("ALTAR"), data);
-	GopEngine::loadAltar(data);
+	GopBoard::loadAltar(data);
 	gs.freeze();
 	InvalidateRect(hWnd, NULL, false);
 	CheckMenuRadioItem(GetMenu(hWnd), ID_ALTAR_NONE, ID_ALTAR_BODY, id, MF_BYCOMMAND);

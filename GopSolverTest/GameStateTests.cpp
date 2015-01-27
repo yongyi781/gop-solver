@@ -19,7 +19,7 @@ namespace GopSolverTest
 
 		TEST_METHOD_INITIALIZE(InitializeMethods)
 		{
-			GopEngine::loadAltarFromFile(mindAltarFile);
+			GopBoard::loadAltarFromFile(mindAltarFile);
 		}
 
 		TEST_METHOD(SameOrbsEqual)

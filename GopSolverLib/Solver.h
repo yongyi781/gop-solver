@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameState.h"
-#include "GopEngine.h"
+#include "GopBoard.h"
 
 class GameStateNode
 {
