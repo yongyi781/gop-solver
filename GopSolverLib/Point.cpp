@@ -27,11 +27,11 @@ Point Point::parse(std::string str)
 	if (str[0] == '(')
 		str = str.substr(1, str.size() - 2);
 	std::istringstream iss{ str };
-	int8_t x, y;
+	int x, y;
 	iss >> x;
 	iss.ignore(1);
 	iss >> y;
-	return{ x, y };
+	return{ (int8_t)x, (int8_t)y };
 }
 
 const Point Point::zero = Point(0, 0);

@@ -8,12 +8,12 @@ namespace std
 {
 	template<> struct hash<Point>
 	{
-		size_t operator()(const Point& p) const;
+		size_t operator()(const Point p) const;
 	};
 
 	template<> struct hash<pair<Point, Point>>
 	{
-		size_t operator()(const pair<Point, Point>& p) const;
+		size_t operator()(const pair<Point, Point> p) const;
 	};
 
 	template<> struct hash<GameAction>

@@ -11,7 +11,7 @@ namespace std
 	const size_t OFFSET = 2166136261U;
 #endif
 
-	size_t hash<Point>::operator()(const Point & p) const
+	size_t hash<Point>::operator()(const Point p) const
 	{
 		size_t result = OFFSET;
 		result = PRIME * (result ^ std::hash<int8_t>()(p.x));
@@ -19,7 +19,7 @@ namespace std
 		return result;
 	}
 
-	size_t hash<pair<Point, Point>>::operator()(const pair<Point, Point>& p) const
+	size_t hash<pair<Point, Point>>::operator()(const pair<Point, Point> p) const
 	{
 		size_t result = OFFSET;
 		result = PRIME * (result ^ std::hash<Point>()(p.first));
@@ -55,7 +55,8 @@ namespace std
 		result = PRIME * (result + hash<bool>()(player.delayAttractFromMoving));
 		result = PRIME * (result + hash<bool>()(player.delayAttractFromPrototick));
 		result = PRIME * (result + hash<int>()(player.forceAttractOrb));
-		result = PRIME * (result + hash<uint8_t>()(std::min((uint8_t)2, player.holdLength)));
+		result = PRIME * (result + hash<bool>()(player.repel));
+		result = PRIME * (result + hash<uint8_t>()(player.holdLength));
 		return result;
 	}
 

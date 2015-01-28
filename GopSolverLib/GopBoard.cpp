@@ -464,15 +464,19 @@ string GopBoard::gridStr()
 
 bool GopBoard::willOrbScore(const Orb& orb)
 {
-	Point location = orb.location;
-	for (int i = 0; i < 4; i++)
-	{
-		// Orb will move to final location in at most 4 ticks
-		location = nextOrbLocation(location, orb.target);
-		if (isAdjacentToAltar(location))
-			return true;
-	}
-	return false;
+	if (orb.target == orb.location || orb.target == Point::invalid)
+		return isAdjacentToAltar(orb.location);
+
+	if (isAdjacentToAltar(orb.target))
+		return true;
+
+	// If not one of the above, then it means that orb will move to altar in the middle of its path...
+	// (and the path would take it out, but it scored in the process)
+	// This takes at most 2 ticks.
+	Point loc1 = nextOrbLocation(orb.location, orb.target);
+	Point loc2 = nextOrbLocation(loc1, orb.target);
+
+	return isAdjacentToAltar(loc2) || isAdjacentToAltar(loc1);
 }
 
 const std::vector<Point>& GopBoard::getNeighbors(Point p, PathMode mode)

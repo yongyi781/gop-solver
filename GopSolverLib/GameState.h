@@ -40,13 +40,13 @@ public:
 	int forceAttractOrb = -1;
 	uint8_t holdLength = 0;
 	// The below are not tested for in equality.
-	// To prevent moving twice
-	bool hasMovedThisTick = false;
 	Point lastMoveTarget = Point::invalid;
 	Point lastAttractTarget = Point::invalid;
 	Point lastOrbClickLocation = Point::invalid;
 	GameAction action = GameAction::idle();
 	GameAction previousAction = GameAction::idle();
+	// To prevent moving twice
+	bool hasMovedThisTick = false;
 };
 
 class GameState

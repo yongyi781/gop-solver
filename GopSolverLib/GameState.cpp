@@ -32,7 +32,8 @@ bool Player::operator==(const Player & other) const
 		&& delayAttractFromMoving == other.delayAttractFromMoving
 		&& delayAttractFromPrototick == other.delayAttractFromPrototick
 		&& forceAttractOrb == other.forceAttractOrb
-		&& std::min((uint8_t)2, holdLength) == std::min((uint8_t)2, other.holdLength);
+		&& repel == other.repel
+		&& holdLength == other.holdLength;
 }
 
 void Player::stopAttracting()
@@ -301,8 +302,8 @@ void GameState::stepAttract(Player& p, bool isSecondAttract)
 	else if (p.delayAttractFromMoving)
 	{
 		// Force on next tick
-		forceAttractNextTick(p, player.action.getOrbIndex());
 		p.delayAttractFromPrototick = false;
+		forceAttractNextTick(p, player.action.getOrbIndex());
 	}
 	else
 	{
