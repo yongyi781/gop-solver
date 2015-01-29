@@ -26,8 +26,6 @@ public:
 
 	GameAction copyWithSettings(bool toggleRun, bool changeWand, bool newAttract) const;
 
-	size_t hash() const;
-
 	std::string toString() const;
 
 	static std::string formatActions(const std::deque<GameAction>& actions);
