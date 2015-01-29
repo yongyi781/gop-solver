@@ -100,7 +100,6 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 			for (int i = 0; i < (int)orbs.size(); ++i)
 			{
 				// If orb is about to score, don't need to touch it again!
-				// Also, no point in trying to attract it if it's not going to reach it in the next tick
 				if (!GopBoard::willOrbScore(orbs[i]))
 				{
 					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, false, false), node, node->cost + 1, 1);
