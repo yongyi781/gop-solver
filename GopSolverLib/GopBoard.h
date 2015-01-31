@@ -1,8 +1,10 @@
 #pragma once
 
+#include <unordered_map>
 #include "GameState.h"
 #include "GopArray.h"
 #include "Point.h"
+#include "hash.h"
 
 enum class Tile { Floor, Wall, Rock, Water, PanelW, PanelS, PanelSW, MiniPillar1, MiniPillar2, Invalid };
 enum class PathMode { Sight, Orb, Player };
@@ -45,4 +47,6 @@ private:
 	static GopArray<Tile> grid;
 	static GopArray<std::vector<Point>> neighbors[3];
 	static GopArray<int> distancesToAltarTable;
+	static std::unordered_map<std::pair<Point, Point>, std::deque<Point>> playerPathCache;
+	static std::unordered_map<std::pair<Point, Point>, bool> reachabilityCache;
 };

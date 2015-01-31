@@ -93,10 +93,10 @@ vector<Point> getLineOfSight(int8_t x1, int8_t y1, int8_t x2, int8_t y2)
 GopArray<Tile> GopBoard::grid;
 GopArray<vector<Point>> GopBoard::neighbors[3];
 GopArray<int> GopBoard::distancesToAltarTable;
-std::unordered_map<GameState, vector<shared_ptr<GameStateNode>>> solutionCache;
-std::unordered_map<pair<Point, Point>, bool> reachabilityCache;
+std::unordered_map<pair<Point, Point>, deque<Point>> GopBoard::playerPathCache;
+std::unordered_map<pair<Point, Point>, bool> GopBoard::reachabilityCache;
+
 std::unordered_map<pair<Point, Point>, int> distanceToReachableCache;
-std::unordered_map<pair<Point, Point>, deque<Point>> playerPathCache;
 
 Tile GopBoard::get(int8_t x, int8_t y)
 {
@@ -310,22 +310,23 @@ Point GopBoard::nextOrbLocation(Point location, Point target)
 
 bool GopBoard::canReach(Point p1, Point p2, bool repel)
 {
+	pair<Point, Point> key = { p1, p2 };
 	if (p1 == p2 || p1.walkingDistanceTo(p2) > (repel ? MAX_REPEL_REACH_DISTANCE : MAX_REACH_DISTANCE))
 		return false;
 
-	if (reachabilityCache.find({ p1, p2 }) != reachabilityCache.end())
-		return reachabilityCache[{ p1, p2 }];
+	if (reachabilityCache.find(key) != reachabilityCache.end())
+		return reachabilityCache[key];
 
 	auto lineOfSight = getLineOfSight(p1.x, p1.y, p2.x, p2.y);
 	for (size_t i = 1; i < lineOfSight.size(); ++i)
 	{
 		if (!(i == lineOfSight.size() - 1 && !isPassable(lineOfSight[i], PathMode::Orb)) && !canMove(lineOfSight[i - 1], lineOfSight[i] - lineOfSight[i - 1], PathMode::Sight))
 		{
-			reachabilityCache[{ p1, p2 }] = false;
+			reachabilityCache[key] = false;
 			return false;
 		}
 	}
-	reachabilityCache[{ p1, p2 }] = true;
+	reachabilityCache[key] = true;
 	return true;
 }
 
@@ -386,24 +387,30 @@ bool GopBoard::isAdjacentToAltar(Point p)
 
 deque<Point> GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 {
+	pair<Point, Point> key = { p1, p2 };
+	if (playerPathCache.find(key) != playerPathCache.end())
+		return playerPathCache[key];
+
 	if (p1 == p2)
 	{
 		if (clickOrb)
 		{
-			for (int i = 0; i < 4; ++i) {
+			for (int i = 0; i < 4; ++i)
+			{
 				Point p = p1 + Point::offsets[i];
 				if (isInRange(p.x, p.y) && canMove(p1, Point::offsets[i], PathMode::Player))
+				{
+					playerPathCache[key] = { p };
 					return{ p };
+				}
 			}
 		}
 		else
 		{
+			playerPathCache[key] = {};
 			return{};
 		}
 	}
-
-	if (playerPathCache.find({ p1, p2 }) != playerPathCache.end())
-		return playerPathCache[{ p1, p2 }];
 
 	queue<Point> q;
 	q.push(p1);
@@ -446,7 +453,7 @@ deque<Point> GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 		path.push_front(p);
 	if (clickOrb && !path.empty() && path.back() == p2)
 		path.pop_back();	// Don't include orb location
-	playerPathCache[{ p1, p2 }] = path;
+	playerPathCache[key] = path;
 	return path;
 };
 
