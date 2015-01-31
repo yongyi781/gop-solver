@@ -34,5 +34,6 @@ struct CompareNode : public std::binary_function<std::shared_ptr<GameStateNode>,
 class Solver
 {
 public:
+	static bool isStateInGoal(const GameState& s);
 	static std::vector<std::shared_ptr<GameStateNode>> solve(const GameState& initialState, int* pNumExpanded = nullptr, bool debug = false);
 };

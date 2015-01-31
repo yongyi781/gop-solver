@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Point.h"
-#include "GameAction.h"
-#include "GameState.h"
+class Point;
+class GameAction;
+class Orb;
+class Player;
+class GameState;
 
 namespace std
 {

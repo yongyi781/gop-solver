@@ -52,20 +52,18 @@ void Player::freeze()
 	hasMovedThisTick = false;
 	lastMoveTarget = Point::invalid;
 	lastAttractTarget = Point::invalid;
-	movePath.clear();
+	movePath.first = movePath.second;	// Clear move path
 	lastOrbClickLocation = Point::invalid;
 }
 
 void Player::stepMove(bool isSecondAttract)
 {
-	if (movePath.size() > 0)
+	if (movePath.first != movePath.second)
 	{
-		Point next = movePath.front();
-		movePath.pop_front();
-		if (movePath.size() > 0 && run)
+		Point next = *movePath.first++;
+		if (movePath.first != movePath.second && run)
 		{
-			next = movePath.front();
-			movePath.pop_front();
+			next = *movePath.first++;
 		}
 
 		location = next;
@@ -204,11 +202,11 @@ void GameState::stepPlayer(Player& p)
 		if (p.lastMoveTarget != p.action.getLocation())
 		{
 			// Calculate move path if the player clicked somewhere else.
-			p.movePath = GopBoard::getPlayerPath(p.location, p.action.getLocation(), false);
+			p.movePath = GopBoard::getPlayerPath2(p.location, p.action.getLocation(), false);
 			p.lastMoveTarget = p.action.getLocation();
 		}
 
-		if (p.movePath.empty())
+		if (p.movePath.first == p.movePath.second)
 		{
 			// Change to idle
 			p.lastMoveTarget = Point::invalid;
@@ -278,13 +276,13 @@ void GameState::stepAttract(Player& p, bool isSecondAttract)
 		if (p.lastOrbClickLocation != p.lastAttractTarget)
 		{
 			// Recalculate move path.
-			p.movePath = GopBoard::getPlayerPath(p.location, p.lastOrbClickLocation, true);
+			p.movePath = GopBoard::getPlayerPath2(p.location, p.lastOrbClickLocation, true);
 			p.lastAttractTarget = p.lastOrbClickLocation;
 		}
-		if (p.movePath.empty())
+		if (p.movePath.first == p.movePath.second)
 		{
 			// The move path is wrong, re-calculate...
-			p.movePath = GopBoard::getPlayerPath(p.location, orb.location, true);
+			p.movePath = GopBoard::getPlayerPath2(p.location, orb.location, true);
 		}
 
 		if (!p.hasMovedThisTick)
@@ -419,9 +417,6 @@ int GameState::getTwoTickHoldCost(int distances[], int currentOrb, bool prototic
 
 int GameState::getHeuristicCost() const
 {
-	if (GopBoard::isStateInGoal(*this))
-		return 0;
-
 	int h = 0;
 
 	if (orbs.size() == 1)

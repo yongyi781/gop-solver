@@ -45,25 +45,25 @@ namespace GopSolverTest
 			auto path3 = GopBoard::getPlayerPath({ 2, 0 }, { -3, -7 }, true);
 			auto path4 = GopBoard::getPlayerPath({ 0, -2 }, { 7,-16 }, true);
 
-			std::deque<Point> expectedPath1 =
+			std::list<Point> expectedPath1 =
 			{
 				{2, -1}, {2,-2}, {1, -2}, {0,-2}, {-1,-2},
 				{-2,-2}, {-3,-2}, {-4,-2}, {-5,-2}, {-6,-1},
 				{-7,0}
 			};
 
-			std::deque<Point> expectedPath2 =
+			std::list<Point> expectedPath2 =
 			{
 				{ 2, -1 }
 			};
 
-			std::deque<Point> expectedPath3 =
+			std::list<Point> expectedPath3 =
 			{
 				{ 2, -1 },{ 2,-2 },{ 1, -2 },{ 0,-3 },{ 0,-4 },
 				{ 0,-5 }, {-1, -6}, {-2, -7}
 			};
 
-			std::deque<Point> expectedPath4 =
+			std::list<Point> expectedPath4 =
 			{
 				{ 1, -2 },{ 2, -3}, {2, -4}, {3, -4}, {4, -5}, {5, -6}
 			};

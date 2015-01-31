@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "GopBoard.h"
+#include "GameState.h"
 #include "hash.h"
 
 using namespace std;
@@ -93,7 +94,8 @@ vector<Point> getLineOfSight(int8_t x1, int8_t y1, int8_t x2, int8_t y2)
 GopArray<Tile> GopBoard::grid;
 GopArray<vector<Point>> GopBoard::neighbors[3];
 GopArray<int> GopBoard::distancesToAltarTable;
-std::unordered_map<pair<Point, Point>, deque<Point>> GopBoard::playerPathCache;
+std::unordered_map<pair<Point, Point>, std::list<Point>> GopBoard::playerPathCache;
+std::unordered_map<pair<Point, Point>, std::list<Point>> GopBoard::playerPathClickOrbCache;
 std::unordered_map<pair<Point, Point>, bool> GopBoard::reachabilityCache;
 
 std::unordered_map<pair<Point, Point>, int> distanceToReachableCache;
@@ -108,6 +110,7 @@ void GopBoard::calculateTables()
 	reachabilityCache.clear();
 	distanceToReachableCache.clear();
 	playerPathCache.clear();
+	playerPathClickOrbCache.clear();
 
 	for (int i = 0; i < 3; ++i)
 	{
@@ -385,11 +388,12 @@ bool GopBoard::isAdjacentToAltar(Point p)
 	return p.x >= -2 && p.x <= 2 && p.y >= -2 && p.y <= 2;
 }
 
-deque<Point> GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
+std::list<Point>& GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 {
 	pair<Point, Point> key = { p1, p2 };
-	if (playerPathCache.find(key) != playerPathCache.end())
-		return playerPathCache[key];
+	auto& cache = clickOrb ? playerPathClickOrbCache : playerPathCache;
+	if (cache.find(key) != cache.end())
+		return cache[key];
 
 	if (p1 == p2)
 	{
@@ -400,15 +404,15 @@ deque<Point> GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 				Point p = p1 + Point::offsets[i];
 				if (isInRange(p.x, p.y) && canMove(p1, Point::offsets[i], PathMode::Player))
 				{
-					playerPathCache[key] = { p };
-					return{ p };
+					cache[key] = { p };
+					return cache[key];
 				}
 			}
 		}
 		else
 		{
-			playerPathCache[key] = {};
-			return{};
+			cache[key] = {};
+			return cache[key];
 		}
 	}
 
@@ -448,14 +452,20 @@ deque<Point> GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 		}
 	}
 
-	deque<Point> path;
+	std::list<Point> path;
 	for (Point p = best; p != p1; p = parents[p])
 		path.push_front(p);
 	if (clickOrb && !path.empty() && path.back() == p2)
 		path.pop_back();	// Don't include orb location
-	playerPathCache[key] = path;
-	return path;
-};
+	cache[key] = path;
+	return cache[key];
+}
+
+GopBoard::path_iterator_pair GopBoard::getPlayerPath2(Point p1, Point p2, bool clickOrb)
+{
+	auto& path = getPlayerPath(p1, p2, clickOrb);
+	return { path.cbegin(), path.cend() };
+}
 
 string GopBoard::gridStr()
 {
@@ -489,12 +499,4 @@ bool GopBoard::willOrbScore(const Orb& orb)
 const std::vector<Point>& GopBoard::getNeighbors(Point p, PathMode mode)
 {
 	return neighbors[(int)mode][p];
-}
-
-bool GopBoard::isStateInGoal(const GameState& s)
-{
-	for (const Orb& orb : s.orbs)
-		if (!isAdjacentToAltar(orb.location))
-			return false;
-	return true;
 }

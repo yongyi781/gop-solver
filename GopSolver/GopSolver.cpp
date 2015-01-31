@@ -236,6 +236,7 @@ void testHeuristic(std::string altarFile, GameState state, std::string actionsSt
 
 void doSolverBenchmarks()
 {
+	benchmarkSolver("..\\GopSolverLib\\air.txt", { { { 0,-2 } },{ { { 4,6 } } } });
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { 4,9 } } } });
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -13,0 } } } });
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { 7,-16 } } } });

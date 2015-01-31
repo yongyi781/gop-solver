@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-#include "GameState.h"
+#include <list>
 #include "GopArray.h"
 #include "Point.h"
 #include "hash.h"
@@ -12,11 +12,15 @@ enum class PathMode { Sight, Orb, Player };
 inline bool isInRange(int8_t x, int8_t y) { return x >= -GRID_MAX && x <= GRID_MAX && y >= -GRID_MAX && y <= GRID_MAX; }
 inline bool isInRange(Point p) { return isInRange(p.x, p.y); }
 
+class Orb;
 class GameStateNode;
 
 class GopBoard
 {
 public:
+	using path_iterator = std::list<Point>::const_iterator;
+	using path_iterator_pair = std::pair<std::list<Point>::const_iterator, std::list<Point>::const_iterator>;
+
 	static Tile get(int8_t x, int8_t y);
 	static void clear();
 	static void loadAltar(const char* data);
@@ -33,8 +37,8 @@ public:
 	// Distance to any square that can reach this orb.
 	static int distanceToReachable(Point p1, Point p2, bool repel = false);
 	static bool isAdjacentToAltar(Point p);
-	static bool isStateInGoal(const GameState& s);
-	static std::deque<Point> getPlayerPath(Point p1, Point p2, bool clickOrb = false);
+	static std::list<Point>& getPlayerPath(Point p1, Point p2, bool clickOrb = false);
+	static path_iterator_pair getPlayerPath2(Point p1, Point p2, bool clickOrb = false);
 	static std::string gridStr();
 	static bool willOrbScore(const Orb & orb);
 	static const std::vector<Point>& getNeighbors(Point p, PathMode mode);
@@ -47,6 +51,7 @@ private:
 	static GopArray<Tile> grid;
 	static GopArray<std::vector<Point>> neighbors[3];
 	static GopArray<int> distancesToAltarTable;
-	static std::unordered_map<std::pair<Point, Point>, std::deque<Point>> playerPathCache;
+	static std::unordered_map<std::pair<Point, Point>, std::list<Point>> playerPathCache;
+	static std::unordered_map<std::pair<Point, Point>, std::list<Point>> playerPathClickOrbCache;
 	static std::unordered_map<std::pair<Point, Point>, bool> reachabilityCache;
 };

@@ -5,6 +5,8 @@
 
 int GameStateNode::getHeuristicCost() const
 {
+	if (Solver::isStateInGoal(state))
+		return cost;
 	return cost + state.getHeuristicCost();
 }
 
@@ -53,6 +55,14 @@ void addIfNotVisited(gamestate_queue& agenda, std::unordered_map<GameState, int>
 	}
 }
 
+bool Solver::isStateInGoal(const GameState& s)
+{
+	for (const Orb& orb : s.orbs)
+		if (!GopBoard::isAdjacentToAltar(orb.location))
+			return false;
+	return true;
+}
+
 std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initialState, int* pNumExpanded, bool debug)
 {
 	gamestate_queue agenda;
@@ -78,7 +88,7 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 			break;
 
 		// If the orb target is adjacent to altar, then the orb will go into the altar for sure.
-		if (GopBoard::isStateInGoal(node->state))
+		if (isStateInGoal(node->state))
 		{
 			if (minCost >= node->cost)
 			{

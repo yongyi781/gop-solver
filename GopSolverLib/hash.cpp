@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "hash.h"
+#include "Point.h"
+#include "GameState.h"
 
 namespace std
 {

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <list>
 #include "GameAction.h"
+#include "GopBoard.h"
 
 class Orb
 {
@@ -37,7 +39,7 @@ public:
 	int currentOrb = -1;
 	bool delayAttractFromMoving = false;
 	bool delayAttractFromPrototick = false;
-	std::deque<Point> movePath;
+	GopBoard::path_iterator_pair movePath;
 	bool isAttracting = false;
 	int forceAttractOrb = -1;
 	HoldState holdState = HoldState::None;
