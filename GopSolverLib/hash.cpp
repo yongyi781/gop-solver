@@ -56,7 +56,7 @@ namespace std
 		result = PRIME * (result + hash<bool>()(player.delayAttractFromPrototick));
 		result = PRIME * (result + hash<int>()(player.forceAttractOrb));
 		result = PRIME * (result + hash<bool>()(player.repel));
-		result = PRIME * (result + hash<uint8_t>()(player.holdLength));
+		result = PRIME * (result + hash<HoldState>()(player.holdState));
 		return result;
 	}
 

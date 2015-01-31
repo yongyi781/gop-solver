@@ -33,14 +33,14 @@ bool Player::operator==(const Player & other) const
 		&& delayAttractFromPrototick == other.delayAttractFromPrototick
 		&& forceAttractOrb == other.forceAttractOrb
 		&& repel == other.repel
-		&& holdLength == other.holdLength;
+		&& holdState == other.holdState;
 }
 
 void Player::stopAttracting()
 {
 	currentOrb = -1;
 	isAttracting = false;
-	holdLength = 0;
+	holdState = HoldState::None;
 	forceAttractOrb = -1;
 }
 
@@ -267,7 +267,7 @@ void GameState::stepAttract(Player& p, bool isSecondAttract)
 	if (p.action.isNewAttract())
 	{
 		// Reset attract ineffectiveness and drag target.
-		p.holdLength = 0;
+		p.holdState = HoldState::None;
 		p.currentOrb = -1;
 		p.lastOrbClickLocation = orb.location;
 	}
@@ -360,11 +360,13 @@ void GameState::attractSuccess(Player& p, int orbIndex)
 	// Orb has moved, drag path is now invalid.
 	p.lastOrbClickLocation = orb.location;
 	if (p.action.isNewAttract())
-		p.holdLength = 1;
+		p.holdState = HoldState::Tap;
 	else if (!p.isAttracting)
-		p.holdLength++;
+	{
+		p.holdState = p.holdState == HoldState::None ? HoldState::Tap : HoldState::Hold;
+	}
 
-	p.delayAttractFromPrototick = p.holdLength == 1;
+	p.delayAttractFromPrototick = p.holdState == HoldState::Tap;
 	p.isAttracting = true;
 }
 

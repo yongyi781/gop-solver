@@ -12,6 +12,7 @@
 #include <deque>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 #include "../GopSolverLib/GameState.h"
 #include "../GopSolverLib/GopBoard.h"
 #include "../GopSolverLib/hash.h"

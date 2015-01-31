@@ -16,6 +16,8 @@ public:
 	Point target;
 };
 
+enum class HoldState : uint8_t { None, Tap, Hold };
+
 class Player
 {
 public:
@@ -38,7 +40,7 @@ public:
 	std::deque<Point> movePath;
 	bool isAttracting = false;
 	int forceAttractOrb = -1;
-	uint8_t holdLength = 0;
+	HoldState holdState = HoldState::None;
 	// The below are not tested for in equality.
 	Point lastMoveTarget = Point::invalid;
 	Point lastAttractTarget = Point::invalid;

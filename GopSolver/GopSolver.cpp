@@ -90,7 +90,7 @@ time_point<high_resolution_clock> currentTime()
 	return high_resolution_clock::now();
 }
 
-#define SPAWNS airSpawns
+#define SPAWNS waterSpawns
 
 std::mt19937 eng;
 std::uniform_int_distribution<int> dist(0, _countof(SPAWNS) - 1);
@@ -107,8 +107,8 @@ int spawnBadness(int seed, int numSpawns)
 	for (int i = 0; i < numSpawns; ++i)
 	{
 		Point spawn = SPAWNS[dist(eng)];
-		int distance = getAirBadness(spawn);
-		total += distance;
+		int distance = GopBoard::distanceToAltar(spawn);
+		total += distance - 1;
 
 		//if (spawn == Point(-3, -7))
 		//	total += 3;
@@ -128,14 +128,13 @@ int spawnBadness(int seed, int numSpawns)
 	return total;
 }
 
-void findGoodSpawns(std::string altarFile = "..\\GopSolverLib\\air.txt", int numSpawns = 80)
+void findGoodSpawns(std::string altarFile = "..\\GopSolverLib\\air.txt", int numSpawns = 23)
 {
 	GopBoard::loadAltarFromFile(altarFile);
-	std::set<std::pair<int, int>, std::less<>> badness;
+	std::set<std::pair<int, int>, std::greater<>> badness;
 
-	std::cout << spawnBadness(257782116, numSpawns) << std::endl;
-	std::cout << spawnBadness(7850053, numSpawns) << std::endl;
-	std::cout << spawnBadness(470153, numSpawns) << std::endl;
+	std::cout << spawnBadness(92535, numSpawns) << std::endl;
+	std::cout << spawnBadness(61323717, numSpawns) << std::endl;
 
 	auto startTime = currentTime();
 	for (int i = 0; i < 60000000; ++i)
@@ -235,35 +234,36 @@ void testHeuristic(std::string altarFile, GameState state, std::string actionsSt
 	}
 }
 
-int _tmain()
+void doSolverBenchmarks()
 {
-	//findGoodSpawns();
-	//std::cout << getAirBadness({ -3, -7 });
-
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { 4,9 } } } });
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -13,0 } } } });
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { 7,-16 } } } });
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -16,0 } } } });
 	benchmarkSolver("..\\GopSolverLib\\air.txt", { { { 0,-2 } },{ { { -7,5 } },{ { 7,5 } } } });
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -11,0 } },{ { 11,0 } } } });
-	benchmarkSolver("..\\GopSolverLib\\earth.txt", { { { -2, 0 } },{ { { -15,-8 } } } }, true);
+	benchmarkSolver("..\\GopSolverLib\\earth.txt", { { { -2, 0 } },{ { { -15,-8 } } } });
 
 	testHeuristic("..\\GopSolverLib\\earth.txt", { { { -2, 0 } },{ { { -15,-8 } } } }, "(-17,-10)[9]{q}*AA(-19,-11)*AA(-15,-12)*A*AA[8]-[4]");
-	//testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -13,0 } } } }, "(-3,-8)[3]*AA(-1,-5)[2]*AA[4](0,-4)*AAAA--");
-	//testHeuristic("..\\GopSolverLib\\earth.txt", { { { -3,-1 } },{ { { -13,5 } } } }, "*A(-4,-1)-*A-*A-*AA*A{q}A--");
-	//testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0, -2 } },{ { { 8, -16 } } } }, "(0,-8)[3]*AAA--*AA(0,-10){r}*A{r}{q}AA[6]--");
-	//testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0, -2 } },{ { { -1,-13 } },{ { -1,11 } } } }, "(-6,-3)[3]*AA(-6,-2)*BBB(-2,1)[2]*AAA*BB*AA*BB*AA*B-");
-	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -4, 2 } },{ { 4, 2 } } } }, "*A-*B--");
-	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -5, 3 } },{ { 4, 2 } } } }, "*AA*B--");
-	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -5, 3 } },{ { 5, 3 } } } }, "*AA*BB--");
-	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 7, 5 } } } }, "*AA*BB*A-*B--");
-	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 4, 2 } } } }, "*AA*BB*A--");
-	//testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 11, -2 } } } }, "*AA*BB*AA*BB*AA*BB--");
-	//testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 10, -2 } } } }, "*AA*BB*AA*BB*AA*B--");
-	//testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 9, -2 } } } }, "*AA*BB*AA*BB*AA*B-");
-	//testHeuristic("..\\GopSolverLib\\earth.txt", { { { 2, -2 } },{ { { -3, -13 } },{ { -2, -12 } } } }, "(2,-3)*AA(0,-5)*BB(1,-5)[2]*AA*BBBB*A(0,-7){q}(0,-7)*AA*BBB*A-");
-	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 2, 0 } },{ { { -4, 4 } }, {{-3, -5}} } }, "*A-*BB*A-");
+	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -13,0 } } } }, "(-3,-8)[3]*AA(-1,-5)[2]*AA[4](0,-4)*AAAA--");
+	testHeuristic("..\\GopSolverLib\\earth.txt", { { { -3,-1 } },{ { { -13,5 } } } }, "*A(-4,-1)-*A-*A-*AA*A{q}A--");
+	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0, -2 } },{ { { 8, -16 } } } }, "(0,-8)[3]*AAA--*AA(0,-10){r}*A{r}{q}AA[6]--");
+	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0, -2 } },{ { { -1,-13 } },{ { -1,11 } } } }, "(-6,-3)[3]*AA(-6,-2)*BBB(-2,1)[2]*AAA*BB*AA*BB*AA*B-");
+	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -4, 2 } },{ { 4, 2 } } } }, "*A-*B--");
+	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -5, 3 } },{ { 4, 2 } } } }, "*AA*B--");
+	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -5, 3 } },{ { 5, 3 } } } }, "*AA*BB--");
+	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 7, 5 } } } }, "*AA*BB*A-*B--");
+	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 4, 2 } } } }, "*AA*BB*A--");
+	testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 11, -2 } } } }, "*AA*BB*AA*BB*AA*BB--");
+	testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 10, -2 } } } }, "*AA*BB*AA*BB*AA*B--");
+	testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 9, -2 } } } }, "*AA*BB*AA*BB*AA*B-");
+	testHeuristic("..\\GopSolverLib\\earth.txt", { { { 2, -2 } },{ { { -3, -13 } },{ { -2, -12 } } } }, "(2,-3)*AA(0,-5)*BB(1,-5)[2]*AA*BBBB*A(0,-7){q}(0,-7)*AA*BBB*A-");
+	testHeuristic("..\\GopSolverLib\\air.txt", { { { 2, 0 } },{ { { -4, 4 } }, {{-3, -5}} } }, "*A-*BB*A-");
+}
 
+int _tmain()
+{
+	doSolverBenchmarks();
 	//set<pair<int, int>, less<>> badness;
 	//for (int i = 0; i < 41; ++i)
 	//{

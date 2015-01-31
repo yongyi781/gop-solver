@@ -2,7 +2,7 @@
 
 #include "Point.h"
 
-enum class GameActionType { Idle, Move, Attract };
+enum class GameActionType : uint8_t { Idle, Move, Attract };
 
 // An immutable struct representing an action that a player can take.
 class GameAction
