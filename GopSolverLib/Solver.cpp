@@ -51,7 +51,7 @@ void addIfNotVisited(gamestate_queue& agenda, std::unordered_map<GameState, int>
 	if (visitedCosts.count(state) == 0 || visitedCosts[state] > cost)
 	{
 		visitedCosts[state] = cost;
-		agenda.emplace(new GameStateNode(state, action, parent, cost));
+		agenda.emplace(std::make_shared<GameStateNode>(state, action, parent, cost));
 	}
 }
 
@@ -66,7 +66,7 @@ bool Solver::isStateInGoal(const GameState& s)
 std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initialState, int* pNumExpanded, bool debug)
 {
 	gamestate_queue agenda;
-	agenda.emplace(new GameStateNode(initialState, GameAction::idle()));
+	agenda.emplace(std::make_shared<GameStateNode>(initialState, GameAction::idle()));
 	std::unordered_map<GameState, int> visitedCosts;
 	int minCost = INT_MAX;
 	std::vector<std::shared_ptr<GameStateNode>> solutions;
