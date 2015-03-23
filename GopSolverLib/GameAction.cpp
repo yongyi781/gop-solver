@@ -18,9 +18,9 @@ GameAction GameAction::copy(bool discardSettings) const
 	return GameAction(type, location, orbIndex, toggleRun, changeWand, newAttract);
 }
 
-GameAction GameAction::copyWithSettings(bool toggleRun, bool changeWand, bool newAttract) const
+GameAction GameAction::copyWithSettings(bool bToggleRun, bool bChangeWand, bool bNewAttract) const
 {
-	return GameAction(type, location, orbIndex, toggleRun, changeWand, newAttract);
+	return GameAction(type, location, orbIndex, bToggleRun, bChangeWand, bNewAttract);
 }
 
 std::string GameAction::toString() const

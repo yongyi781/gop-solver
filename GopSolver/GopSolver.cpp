@@ -90,7 +90,7 @@ time_point<high_resolution_clock> currentTime()
 	return high_resolution_clock::now();
 }
 
-#define SPAWNS waterSpawns
+#define SPAWNS mindSpawns
 
 std::mt19937 eng;
 std::uniform_int_distribution<int> dist(0, _countof(SPAWNS) - 1);
@@ -102,13 +102,17 @@ int getAirBadness(Point p)
 
 int spawnBadness(int seed, int numSpawns)
 {
+	std::vector<Point> goodPracticeSpawns{ {-14, 12}, {-14, 11}, {-15, 11}, {-14, 9}, {-13, 8}, {-15, 5}, {-14, 7}, {-12, 12}, {-9, 9}, {-10, 10}, {-11, 11}, {-10, 11}, {-14, 10}, {-15, 10} };
+
 	eng.seed(seed);
 	int total = 0;
 	for (int i = 0; i < numSpawns; ++i)
 	{
 		Point spawn = SPAWNS[dist(eng)];
 		int distance = GopBoard::distanceToAltar(spawn);
-		total += distance - 1;
+		total += distance > 10 ? 2 * distance - 1 : distance - 1;
+		if (std::find(std::begin(goodPracticeSpawns), std::end(goodPracticeSpawns), spawn) != goodPracticeSpawns.end())
+			total += 10000;
 
 		//if (spawn == Point(-3, -7))
 		//	total += 3;
@@ -133,11 +137,8 @@ void findGoodSpawns(std::string altarFile = "..\\GopSolverLib\\air.txt", int num
 	GopBoard::loadAltarFromFile(altarFile);
 	std::set<std::pair<int, int>, std::greater<>> badness;
 
-	std::cout << spawnBadness(92535, numSpawns) << std::endl;
-	std::cout << spawnBadness(61323717, numSpawns) << std::endl;
-
 	auto startTime = currentTime();
-	for (int i = 0; i < 60000000; ++i)
+	for (int i = 0; i < 10000; ++i)
 	{
 		badness.emplace(spawnBadness(i, numSpawns), i);
 		if (badness.size() >= 100)
@@ -264,7 +265,7 @@ void doSolverBenchmarks()
 
 int _tmain()
 {
-	doSolverBenchmarks();
+	findGoodSpawns("..\\GopSolverLib\\mind.txt", 15);
 	//set<pair<int, int>, less<>> badness;
 	//for (int i = 0; i < 41; ++i)
 	//{
