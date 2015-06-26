@@ -265,7 +265,8 @@ void doSolverBenchmarks()
 
 int _tmain()
 {
-	findGoodSpawns("..\\GopSolverLib\\mind.txt", 15);
+	doSolverBenchmarks();
+	//findGoodSpawns("..\\GopSolverLib\\mind.txt", 15);
 	//set<pair<int, int>, less<>> badness;
 	//for (int i = 0; i < 41; ++i)
 	//{

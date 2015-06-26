@@ -407,7 +407,7 @@ int GameState::getTwoTickHoldCost(int distances[], int currentOrb, bool prototic
 		currentOrb = 1 - currentOrb;
 	}
 
-	bool isAttractingFartherOrb = distances[0] == distances[1] || currentOrb == 0;
+	//bool isAttractingFartherOrb = distances[0] == distances[1] || currentOrb == 0;
 	bool isAttractingCloserOrb = distances[0] == distances[1] || currentOrb == 1;
 
 	int cost = 1 + distances[0] + distances[1] / 3;

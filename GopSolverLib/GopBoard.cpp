@@ -317,8 +317,9 @@ bool GopBoard::canReach(Point p1, Point p2, bool repel)
 	if (p1 == p2 || p1.walkingDistanceTo(p2) > (repel ? MAX_REPEL_REACH_DISTANCE : MAX_REACH_DISTANCE))
 		return false;
 
-	if (reachabilityCache.find(key) != reachabilityCache.end())
-		return reachabilityCache[key];
+	auto iter = reachabilityCache.find(key);
+	if (iter != reachabilityCache.end())
+		return iter->second;
 
 	auto lineOfSight = getLineOfSight(p1.x, p1.y, p2.x, p2.y);
 	for (size_t i = 1; i < lineOfSight.size(); ++i)
@@ -351,8 +352,9 @@ int GopBoard::distanceToReachable(Point p1, Point p2, bool repel)
 	if (p1 == p2)
 		return 1;	// Must move away from orb!
 
-	if (distanceToReachableCache.find({ p1, p2 }) != distanceToReachableCache.end())
-		return distanceToReachableCache[{p1, p2}];
+	auto iter = distanceToReachableCache.find({ p1, p2 });
+	if (iter != distanceToReachableCache.end())
+		return iter->second;
 
 	queue<pair<Point, int>> q;
 	GopArray<bool> visited;
@@ -392,8 +394,9 @@ std::list<Point>& GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 {
 	pair<Point, Point> key = { p1, p2 };
 	auto& cache = clickOrb ? playerPathClickOrbCache : playerPathCache;
-	if (cache.find(key) != cache.end())
-		return cache[key];
+	auto iter = cache.find(key);
+	if (iter != cache.end())
+		return iter->second;
 
 	if (p1 == p2)
 	{

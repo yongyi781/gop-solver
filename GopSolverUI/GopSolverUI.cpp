@@ -6,8 +6,6 @@
 
 #define MAX_LOADSTRING 100
 
-using namespace std;
-
 // Global Variables:
 HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
@@ -15,10 +13,9 @@ TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 HFONT hWindowFont;
 HWND hWindow;
 HWND hSolutionsListBox;
-HWND hBackwardButton;
 HWND hPlayButton;
-HWND hForwardButton;
 HWND hCopyButton;
+HWND hCopyUrlButton;
 const TCHAR* playSymbol = _T("\u25b6");
 const TCHAR* stopSymbol = _T("\u25a0");
 const int PANEL_INITIALWIDTH = 300;
@@ -33,10 +30,11 @@ HBRUSH orbHighlightBrush;
 HBRUSH stateBrushes[9];
 GameState gs;
 GameState tempGs;
-vector<deque<pair<GameState, GameAction>>> solutions;
+std::vector<std::deque<std::pair<GameState, GameAction>>> solutions;
 bool isPlaying;
 int solutionIndex = -1;
 int solutionPathIndex = -1;
+int currentAltar = 1;
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -139,7 +137,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 inline int clamp(int x, int minimum, int maximum)
 {
-	return min(max(x, minimum), maximum);
+	return std::min(std::max(x, minimum), maximum);
 }
 
 Point fromClientCoords(POINT pt)
@@ -171,10 +169,10 @@ void DrawGrid(HDC hdc, const RECT& rcClient)
 	FillRect(hdc, &rcClient, blackBrush);
 	for (int8_t y = -GRID_MAX; y <= GRID_MAX; ++y)
 		for (int8_t x = -GRID_MAX; x <= GRID_MAX; ++x)
-			FillSquare(hdc, x, y, stateBrushes[(int)GopBoard::get(x, y)]);
+		FillSquare(hdc, x, y, stateBrushes[(int)GopBoard::get(x, y)]);
 	for (size_t i = 0; i < gs.orbs.size(); ++i)
 		if (gs.orbs[i].location != Point::invalid)
-			FillSquare(hdc, gs.orbs[i].location, gs.player.currentOrb == (int)i && gs.orbs[i].target != Point::invalid ? orbHighlightBrush : orbBrush);
+		FillSquare(hdc, gs.orbs[i].location, gs.player.currentOrb == (int)i && gs.orbs[i].target != Point::invalid ? orbHighlightBrush : orbBrush);
 	FillSquare(hdc, gs.player.location, gs.player.action.getType() == GameActionType::Attract ? gs.player.currentOrb != -1 ? playerAttractingBrush : playerDraggingBrush : playerIdleBrush);
 
 	// Finally, mini-pillars and walls.
@@ -229,14 +227,12 @@ void InitializeControls(HWND hWnd)
 	hSolutionsListBox = CreateWindow(_T("LISTBOX"), _T("Hello"),
 		WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, 0, 0,
 		1, 1, hWnd, NULL, hInst, NULL);
-	hBackwardButton = CreateWindow(_T("BUTTON"), _T("<"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
-		1, 1, hWnd, (HMENU)IDB_BACK, hInst, NULL);
 	hPlayButton = CreateWindow(_T("BUTTON"), playSymbol, WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
 		1, 1, hWnd, (HMENU)IDB_PLAY, hInst, NULL);
-	hForwardButton = CreateWindow(_T("BUTTON"), _T(">"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
-		23, 23, hWnd, (HMENU)IDB_FORWARD, hInst, NULL);
 	hCopyButton = CreateWindow(_T("BUTTON"), _T("&Copy"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
 		75, 23, hWnd, (HMENU)IDB_COPY, hInst, NULL);
+	hCopyUrlButton = CreateWindow(_T("BUTTON"), _T("Copy &URL"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
+		75, 23, hWnd, (HMENU)IDB_COPYURL, hInst, NULL);
 }
 
 void LoadFileInResource(int name, LPCTSTR type, const char*& data)
@@ -259,6 +255,8 @@ void SetCurrentAltar(HWND hWnd, int id)
 	gs.freeze();
 	InvalidateRect(hWnd, NULL, false);
 	CheckMenuRadioItem(GetMenu(hWnd), ID_ALTAR_NONE, ID_ALTAR_BODY, id, MF_BYCOMMAND);
+	// Current altar is a number from 1 (air) to 6 (body).
+	currentAltar = id - ID_ALTAR_AIR + 1;
 }
 
 void SetPlaying(bool play)
@@ -278,7 +276,7 @@ void LoadSolutionsIntoListBox()
 	ListBox_ResetContent(hSolutionsListBox);
 	for (const auto& solution : solutions)
 	{
-		wostringstream sstr;
+		std::wostringstream sstr;
 		sstr << "[" << solution.size() + 1 << "] ";
 		sstr << GameStateNode::getActions(solution).c_str();
 		ListBox_AddString(hSolutionsListBox, sstr.str().c_str());
@@ -307,14 +305,33 @@ void CopyToClipboard(HWND hwnd, const std::string &s) {
 	GlobalFree(hg);
 }
 
-void CopyCurrentSolution()
+void CopyCurrentSolution(bool copyUrl = false)
 {
 	solutionIndex = ListBox_GetCurSel(hSolutionsListBox);
 	if (solutionIndex >= 0)
 	{
 		auto solution = solutions[solutionIndex];
 		std::string actions = GameStateNode::getActions(solution);
-		CopyToClipboard(hWindow, actions);
+		if (!copyUrl)
+		{
+			CopyToClipboard(hWindow, actions);
+		}
+		else
+		{
+			auto startLocation = solution[0].first.player.location;
+			auto orbs = solution[0].first.orbs;
+			std::ostringstream urlStr;
+			urlStr << "http://vief.tk/Solo?numorbs=" << orbs.size() << "&spawns=[";
+			for (auto iter = std::begin(orbs); iter != std::end(orbs); iter++)
+			{
+				if (iter != std::begin(orbs))
+					urlStr << ",";
+				urlStr << "[" << (int)iter->location.x << "," << (int)iter->location.y << "]";
+			}
+			urlStr << "]&code={0 " << currentAltar << " " << startLocation.toString() << "r}"
+				<< actions;
+			CopyToClipboard(hWindow, urlStr.str());
+		}
 	}
 }
 
@@ -388,18 +405,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// Parse the menu selections:
 		switch (wmId)
 		{
-		case IDB_BACK:
-			solutionPathIndex = clamp(solutionPathIndex - 1, 0, (int)solutions[solutionIndex].size());
-			break;
 		case IDB_PLAY:
 			LoadCurrentSolution();
 			SetPlaying(!isPlaying);
 			break;
-		case IDB_FORWARD:
-			solutionPathIndex = clamp(solutionPathIndex + 1, 0, (int)solutions[solutionIndex].size());
-			break;
 		case IDB_COPY:
 			CopyCurrentSolution();
+			break;
+		case IDB_COPYURL:
+			CopyCurrentSolution(true);
 			break;
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -481,16 +495,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		int width = LOWORD(lParam);
 		int height = HIWORD(lParam);
-		gridUISize = min(width - PANEL_INITIALWIDTH, height);
+		gridUISize = std::min(width - PANEL_INITIALWIDTH, height);
 		gridUISize = (gridUISize / GRID_SIZE) * GRID_SIZE;
 		cellSize = gridUISize / GRID_SIZE;
 		int panelWidth = width - gridUISize;
 
 		SetWindowPos(hSolutionsListBox, NULL, gridUISize, 0, panelWidth, height - 40, SWP_SHOWWINDOW);
-		SetWindowPos(hBackwardButton, NULL, gridUISize + panelWidth / 2 - 26, height - 34, 23, 23, SWP_SHOWWINDOW);
-		SetWindowPos(hPlayButton, NULL, gridUISize + panelWidth / 2, height - 34, 23, 23, SWP_SHOWWINDOW);
-		SetWindowPos(hForwardButton, NULL, gridUISize + panelWidth / 2 + 26, height - 34, 23, 23, SWP_SHOWWINDOW);
-		SetWindowPos(hCopyButton, NULL, gridUISize + panelWidth / 2 + 51, height - 34, 75, 23, SWP_SHOWWINDOW);
+		SetWindowPos(hPlayButton, NULL, gridUISize + panelWidth / 2 - 52, height - 34, 23, 23, SWP_SHOWWINDOW);
+		SetWindowPos(hCopyButton, NULL, gridUISize + panelWidth / 2 - 26, height - 34, 75, 23, SWP_SHOWWINDOW);
+		SetWindowPos(hCopyUrlButton, NULL, gridUISize + panelWidth / 2 - 26 + 78, height - 34, 75, 23, SWP_SHOWWINDOW);
 	}
 	break;
 	case WM_PAINT:
