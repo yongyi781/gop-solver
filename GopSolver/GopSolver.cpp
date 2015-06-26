@@ -246,21 +246,21 @@ void doSolverBenchmarks()
 	benchmarkSolver("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -11,0 } },{ { 11,0 } } } });
 	benchmarkSolver("..\\GopSolverLib\\earth.txt", { { { -2, 0 } },{ { { -15,-8 } } } });
 
-	testHeuristic("..\\GopSolverLib\\earth.txt", { { { -2, 0 } },{ { { -15,-8 } } } }, "(-17,-10)[9]{q}*AA(-19,-11)*AA(-15,-12)*A*AA[8]-[4]");
-	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -13,0 } } } }, "(-3,-8)[3]*AA(-1,-5)[2]*AA[4](0,-4)*AAAA--");
-	testHeuristic("..\\GopSolverLib\\earth.txt", { { { -3,-1 } },{ { { -13,5 } } } }, "*A(-4,-1)-*A-*A-*AA*A{q}A--");
-	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0, -2 } },{ { { 8, -16 } } } }, "(0,-8)[3]*AAA--*AA(0,-10){r}*A{r}{q}AA[6]--");
-	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0, -2 } },{ { { -1,-13 } },{ { -1,11 } } } }, "(-6,-3)[3]*AA(-6,-2)*BBB(-2,1)[2]*AAA*BB*AA*BB*AA*B-");
-	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -4, 2 } },{ { 4, 2 } } } }, "*A-*B--");
-	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -5, 3 } },{ { 4, 2 } } } }, "*AA*B--");
-	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -5, 3 } },{ { 5, 3 } } } }, "*AA*BB--");
-	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 7, 5 } } } }, "*AA*BB*A-*B--");
-	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 4, 2 } } } }, "*AA*BB*A--");
-	testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 11, -2 } } } }, "*AA*BB*AA*BB*AA*BB--");
-	testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 10, -2 } } } }, "*AA*BB*AA*BB*AA*B--");
-	testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 9, -2 } } } }, "*AA*BB*AA*BB*AA*B-");
-	testHeuristic("..\\GopSolverLib\\earth.txt", { { { 2, -2 } },{ { { -3, -13 } },{ { -2, -12 } } } }, "(2,-3)*AA(0,-5)*BB(1,-5)[2]*AA*BBBB*A(0,-7){q}(0,-7)*AA*BBB*A-");
-	testHeuristic("..\\GopSolverLib\\air.txt", { { { 2, 0 } },{ { { -4, 4 } }, {{-3, -5}} } }, "*A-*BB*A-");
+	//testHeuristic("..\\GopSolverLib\\earth.txt", { { { -2, 0 } },{ { { -15,-8 } } } }, "(-17,-10)[9]{q}*AA(-19,-11)*AA(-15,-12)*A*AA[8]-[4]");
+	//testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -13,0 } } } }, "(-3,-8)[3]*AA(-1,-5)[2]*AA[4](0,-4)*AAAA--");
+	//testHeuristic("..\\GopSolverLib\\earth.txt", { { { -3,-1 } },{ { { -13,5 } } } }, "*A(-4,-1)-*A-*A-*AA*A{q}A--");
+	//testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0, -2 } },{ { { 8, -16 } } } }, "(0,-8)[3]*AAA--*AA(0,-10){r}*A{r}{q}AA[6]--");
+	//testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0, -2 } },{ { { -1,-13 } },{ { -1,11 } } } }, "(-6,-3)[3]*AA(-6,-2)*BBB(-2,1)[2]*AAA*BB*AA*BB*AA*B-");
+	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -4, 2 } },{ { 4, 2 } } } }, "*A-*B--");
+	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -5, 3 } },{ { 4, 2 } } } }, "*AA*B--");
+	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -5, 3 } },{ { 5, 3 } } } }, "*AA*BB--");
+	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 7, 5 } } } }, "*AA*BB*A-*B--");
+	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 4, 2 } } } }, "*AA*BB*A--");
+	//testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 11, -2 } } } }, "*AA*BB*AA*BB*AA*BB--");
+	//testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 10, -2 } } } }, "*AA*BB*AA*BB*AA*B--");
+	//testHeuristic("..\\GopSolverLib\\water.txt", { { { 1, -2 } },{ { { 11, -2 } },{ { 9, -2 } } } }, "*AA*BB*AA*BB*AA*B-");
+	//testHeuristic("..\\GopSolverLib\\earth.txt", { { { 2, -2 } },{ { { -3, -13 } },{ { -2, -12 } } } }, "(2,-3)*AA(0,-5)*BB(1,-5)[2]*AA*BBBB*A(0,-7){q}(0,-7)*AA*BBB*A-");
+	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 2, 0 } },{ { { -4, 4 } }, {{-3, -5}} } }, "*A-*BB*A-");
 }
 
 int _tmain()
