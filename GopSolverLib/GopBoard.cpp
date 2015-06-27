@@ -94,6 +94,7 @@ vector<Point> getLineOfSight(int8_t x1, int8_t y1, int8_t x2, int8_t y2)
 GopArray<Tile> GopBoard::grid;
 GopArray<vector<Point>> GopBoard::neighbors[3];
 GopArray<int> GopBoard::distancesToAltarTable;
+
 std::unordered_map<pair<Point, Point>, std::list<Point>> GopBoard::playerPathCache;
 std::unordered_map<pair<Point, Point>, std::list<Point>> GopBoard::playerPathClickOrbCache;
 std::unordered_map<pair<Point, Point>, bool> GopBoard::reachabilityCache;
@@ -402,6 +403,7 @@ std::list<Point>& GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 	{
 		if (clickOrb)
 		{
+			// Player is on top of the orb and needs to move to a square adjacent to it.
 			for (int i = 0; i < 4; ++i)
 			{
 				Point p = p1 + Point::offsets[i];
@@ -419,6 +421,7 @@ std::list<Point>& GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 		}
 	}
 
+	// Main case: player is not right next to the target.
 	queue<Point> q;
 	q.push(p1);
 	GopArray<Point> parents;

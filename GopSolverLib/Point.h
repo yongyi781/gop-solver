@@ -1,5 +1,8 @@
 #pragma once
 
+const int8_t GRID_SIZE = 53;
+const int8_t GRID_MAX = GRID_SIZE / 2;
+
 class Point
 {
 public:

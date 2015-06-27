@@ -16,6 +16,7 @@ HWND hSolutionsListBox;
 HWND hPlayButton;
 HWND hCopyButton;
 HWND hCopyUrlButton;
+HWND hNumExpandedLabel;
 const TCHAR* playSymbol = _T("\u25b6");
 const TCHAR* stopSymbol = _T("\u25a0");
 const int PANEL_INITIALWIDTH = 300;
@@ -96,7 +97,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GOPSOLVERUI));
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 	wcex.lpszMenuName = MAKEINTRESOURCE(IDC_GOPSOLVERUI);
 	wcex.lpszClassName = szWindowClass;
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
@@ -224,15 +225,17 @@ void InitializeControls(HWND hWnd)
 	ncm.cbSize = sizeof(NONCLIENTMETRICS);
 	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
 	hWindowFont = CreateFontIndirect(&ncm.lfMessageFont);
-	hSolutionsListBox = CreateWindow(_T("LISTBOX"), _T("Hello"),
+	hSolutionsListBox = CreateWindow(_T("ListBox"), _T("Hello"),
 		WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, 0, 0,
 		1, 1, hWnd, NULL, hInst, NULL);
-	hPlayButton = CreateWindow(_T("BUTTON"), playSymbol, WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
+	hPlayButton = CreateWindow(_T("Button"), playSymbol, WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
 		1, 1, hWnd, (HMENU)IDB_PLAY, hInst, NULL);
-	hCopyButton = CreateWindow(_T("BUTTON"), _T("&Copy"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
+	hCopyButton = CreateWindow(_T("Button"), _T("&Copy"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
 		75, 23, hWnd, (HMENU)IDB_COPY, hInst, NULL);
-	hCopyUrlButton = CreateWindow(_T("BUTTON"), _T("Copy &URL"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
+	hCopyUrlButton = CreateWindow(_T("Button"), _T("Copy &URL"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
 		75, 23, hWnd, (HMENU)IDB_COPYURL, hInst, NULL);
+	hNumExpandedLabel = CreateWindow(_T("Static"), _T("Number of nodes explored: "), WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0,
+		200, 19, hWnd, NULL, hInst, NULL);
 }
 
 void LoadFileInResource(int name, LPCTSTR type, const char*& data)
@@ -338,8 +341,9 @@ void CopyCurrentSolution(bool copyUrl = false)
 void DoSolve()
 {
 	gs.freeze();
-	int num;
-	auto nodes = Solver::solve(gs, &num, true);
+	int numExpanded;
+	auto nodes = Solver::solve(gs, &numExpanded, IsDebuggerPresent());
+	SetWindowText(hNumExpandedLabel, (_T("Number of nodes explored: ") + std::to_wstring(numExpanded)).c_str());
 	solutions.clear();
 	for (const auto& node : nodes)
 		solutions.push_back(node->getPath());
@@ -495,7 +499,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		int width = LOWORD(lParam);
 		int height = HIWORD(lParam);
-		gridUISize = std::min(width - PANEL_INITIALWIDTH, height);
+		gridUISize = std::min(width - PANEL_INITIALWIDTH, height - 29);
 		gridUISize = (gridUISize / GRID_SIZE) * GRID_SIZE;
 		cellSize = gridUISize / GRID_SIZE;
 		int panelWidth = width - gridUISize;
@@ -504,6 +508,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		SetWindowPos(hPlayButton, NULL, gridUISize + panelWidth / 2 - 52, height - 34, 23, 23, SWP_SHOWWINDOW);
 		SetWindowPos(hCopyButton, NULL, gridUISize + panelWidth / 2 - 26, height - 34, 75, 23, SWP_SHOWWINDOW);
 		SetWindowPos(hCopyUrlButton, NULL, gridUISize + panelWidth / 2 - 26 + 78, height - 34, 75, 23, SWP_SHOWWINDOW);
+		SetWindowPos(hNumExpandedLabel, NULL, 11, height - 29, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE);
 	}
 	break;
 	case WM_PAINT:
@@ -518,6 +523,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		BitBlt(hdc, 0, 0, gridUISize, gridUISize, hdcMem, 0, 0, SRCCOPY);
 		DeleteObject(hbm);
 		DeleteObject(hdcMem);
+
 		EndPaint(hWnd, &ps);
 	}
 	break;

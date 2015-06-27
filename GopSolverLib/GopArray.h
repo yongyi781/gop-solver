@@ -2,9 +2,6 @@
 
 #include "Point.h"
 
-const int8_t GRID_SIZE = 53;
-const int8_t GRID_MAX = GRID_SIZE / 2;
-
 template<class T>
 class GopArray
 {

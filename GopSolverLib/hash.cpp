@@ -15,12 +15,12 @@ namespace std
 
 	size_t hash<Point>::operator()(Point p) const
 	{
-		return ((p.y + GRID_MAX) * 59) + (p.x + GRID_MAX);
+		return ((p.y + GRID_MAX) * 53) + (p.x + GRID_MAX);
 	}
 
 	size_t hashPairOfPoints(Point p1, Point p2)
 	{
-		return (hash<Point>()(p1) * 2819) + hash<Point>()(p2);
+		return (hash<Point>()(p1) * 2809) + hash<Point>()(p2);
 	}
 
 	size_t hash<pair<Point, Point>>::operator()(pair<Point, Point> p) const

@@ -389,11 +389,18 @@ int GameState::getHeuristicCostSingleOrb(const Orb& orb) const
 	if (needsToMoveForOrb(orb))
 	{
 		int distanceToReachable = GopBoard::distanceToReachable(player.location, orb.location, player.repel);
-		h += (1 + distanceToReachable) / 2;
+		h += (distanceToReachable - 1) / 2;
 	}
 
 	// Add the distance to the altar.
-	if (!GopBoard::isAdjacentToAltar(orb.location))
+	Point nextNextLocation = GopBoard::nextOrbLocation(nextLocation, orb.target);
+
+	// If prototick, the player can't attract it the next tick.
+	if (player.delayAttractFromMoving && player.currentOrb == -1 && player.forceAttractOrb != 0) {
+		if (!GopBoard::isAdjacentToAltar(nextLocation))
+			h += 2 + GopBoard::distanceToAltar(nextNextLocation);
+	}
+	else if (!GopBoard::isAdjacentToAltar(orb.location))
 		h += 1 + GopBoard::distanceToAltar(nextLocation);
 	return h;
 }
@@ -435,7 +442,7 @@ int GameState::getHeuristicCost() const
 		{
 			// Don't have to attract orb 0 again
 			h = getHeuristicCostSingleOrb(orbs[1]);
-			if (player.delayAttractFromPrototick && player.currentOrb != 1)
+			if ((player.delayAttractFromPrototick && player.currentOrb != 1) || player.delayAttractFromMoving)
 				h += 1;
 			return std::max(h, GopBoard::distanceToAltar(orbs[0].location));
 		}
@@ -443,7 +450,7 @@ int GameState::getHeuristicCost() const
 		{
 			// Don't have to attract orb 1 again
 			h = getHeuristicCostSingleOrb(orbs[0]);
-			if (player.delayAttractFromPrototick && player.currentOrb != 0)
+			if ((player.delayAttractFromPrototick && player.currentOrb != 0) || player.delayAttractFromMoving)
 				h += 1;
 			return std::max(h, GopBoard::distanceToAltar(orbs[1].location));
 		}
