@@ -389,18 +389,19 @@ int GameState::getHeuristicCostSingleOrb(const Orb& orb) const
 	if (needsToMoveForOrb(orb))
 	{
 		int distanceToReachable = GopBoard::distanceToReachable(player.location, orb.location, player.repel);
-		h += (distanceToReachable - 1) / 2;
+		h += (distanceToReachable + 1) / 2;
 	}
 
 	// Add the distance to the altar.
 	Point nextNextLocation = GopBoard::nextOrbLocation(nextLocation, orb.target);
 
 	// If prototick, the player can't attract it the next tick.
-	if (player.delayAttractFromMoving && player.currentOrb == -1 && player.forceAttractOrb != 0) {
-		if (!GopBoard::isAdjacentToAltar(nextLocation))
-			h += 2 + GopBoard::distanceToAltar(nextNextLocation);
-	}
-	else if (!GopBoard::isAdjacentToAltar(orb.location))
+	//if (player.delayAttractFromMoving && player.lastMoveTarget != Point::invalid) {
+	//	OutputDebugString(L"Hit this location");
+	//	if (!GopBoard::isAdjacentToAltar(nextLocation))
+	//		h += 2 + GopBoard::distanceToAltar(nextNextLocation);
+	//}
+	if (!GopBoard::isAdjacentToAltar(orb.location))
 		h += 1 + GopBoard::distanceToAltar(nextLocation);
 	return h;
 }
@@ -455,36 +456,40 @@ int GameState::getHeuristicCost() const
 			return std::max(h, GopBoard::distanceToAltar(orbs[1].location));
 		}
 
-		// Needs to move for both orbs
-		bool needsToMoveFor0 = needsToMoveForOrb(orbs[0]);
-		bool needsToMoveFor1 = needsToMoveForOrb(orbs[1]);
-		if (needsToMoveFor0 && needsToMoveFor1)
-		{
-			int distanceToReachable = std::min(
-				GopBoard::distanceToReachable(player.location, orbs[0].location, player.repel),
-				GopBoard::distanceToReachable(player.location, orbs[1].location, player.repel));
-			h += (1 + distanceToReachable) / 2;
-		}
-		else if (needsToMoveFor0)
-		{
-			int distanceToReachable = GopBoard::distanceToReachable(player.location, orbs[0].location, player.repel);
-			h += (1 + distanceToReachable) / 2;
-		}
-		else if (needsToMoveFor1)
-		{
-			int distanceToReachable = GopBoard::distanceToReachable(player.location, orbs[1].location, player.repel);
-			h += (1 + distanceToReachable) / 2;
-		}
+		// Use max of the two single orb costs.
+		return std::max(getHeuristicCostSingleOrb(orbs[0]), getHeuristicCostSingleOrb(orbs[1]));
+		//return getHeuristicCostSingleOrb(orbs[0]) + getHeuristicCostSingleOrb(orbs[1]);
 
-		Point nextLocation0 = GopBoard::nextOrbLocation(orbs[0].location, orbs[0].target),
-			nextLocation1 = GopBoard::nextOrbLocation(orbs[1].location, orbs[1].target);
+		//// Needs to move for both orbs
+		//bool needsToMoveFor0 = needsToMoveForOrb(orbs[0]);
+		//bool needsToMoveFor1 = needsToMoveForOrb(orbs[1]);
+		//if (needsToMoveFor0 && needsToMoveFor1)
+		//{
+		//	int distanceToReachable = std::min(
+		//		GopBoard::distanceToReachable(player.location, orbs[0].location, player.repel),
+		//		GopBoard::distanceToReachable(player.location, orbs[1].location, player.repel));
+		//	h += (1 + distanceToReachable) / 2;
+		//}
+		//else if (needsToMoveFor0)
+		//{
+		//	int distanceToReachable = GopBoard::distanceToReachable(player.location, orbs[0].location, player.repel);
+		//	h += (1 + distanceToReachable) / 2;
+		//}
+		//else if (needsToMoveFor1)
+		//{
+		//	int distanceToReachable = GopBoard::distanceToReachable(player.location, orbs[1].location, player.repel);
+		//	h += (1 + distanceToReachable) / 2;
+		//}
 
-		int distances[] = {
-			GopBoard::distanceToAltar(nextLocation0),
-			GopBoard::distanceToAltar(nextLocation1)
-		};
+		//Point nextLocation0 = GopBoard::nextOrbLocation(orbs[0].location, orbs[0].target),
+		//	nextLocation1 = GopBoard::nextOrbLocation(orbs[1].location, orbs[1].target);
 
-		h += getTwoTickHoldCost(distances, player.currentOrb, player.delayAttractFromPrototick);
+		//int distances[] = {
+		//	GopBoard::distanceToAltar(nextLocation0),
+		//	GopBoard::distanceToAltar(nextLocation1)
+		//};
+
+		//h += getTwoTickHoldCost(distances, player.currentOrb, player.delayAttractFromPrototick);
 	}
 	else if (orbs.size() == 3)
 	{

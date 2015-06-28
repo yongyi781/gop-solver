@@ -266,12 +266,14 @@ void doSolverBenchmarks(bool heuristicsOnly = false)
 	testHeuristic("..\\GopSolverLib\\earth.txt", { { { 2, -2 } },{ { { -3, -13 } },{ { -2, -12 } } } }, "(2,-3)*AA(0,-5)*BB(1,-5)[2]*AA*BBBB*A(0,-7){q}(0,-7)*AA*BBB*A-");
 	testHeuristic("..\\GopSolverLib\\air.txt", { { { 2, 0 } },{ { { -4, 4 } }, {{-3, -5}} } }, "*A-*BB*A-");
 	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { { 6,-1 } } } } }, "(2,-3)*AA(0,-2)A---");
+	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -12,-10 } },{ { 8,4 } } } }, "*BB(1,-3)[2]*B(-3,-2)[2]*AAA*B*AAAA(-7,-4){q}*AAAA--");
 }
 
 int _tmain()
 {
 	//doSolverBenchmarks(true);
 	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 7, 5 } } } }, "*AA*BB*A-*B--");
+	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -12,-10 } },{ { 8,4 } } } }, "*BB(1,-3)[2]*B(-3,-2)[2]*AAA*B*AAAA(-7,-4){q}*AAAA--");
 
 	std::cout << "Press any key to continue . . . ";
 	std::cin.get();

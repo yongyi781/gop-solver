@@ -1,0 +1,33 @@
+Best solution uses 8 ticks
+Expanded 34 states in 1.295 ms (0.0380884 ms per state expanded)
+Best solution uses 23 ticks
+Expanded 4222 states in 139.557 ms (0.0330546 ms per state expanded)
+Best solution uses 20 ticks
+Expanded 5207 states in 165.226 ms (0.0317316 ms per state expanded)
+Best solution uses 25 ticks
+Expanded 12011 states in 398.983 ms (0.0332181 ms per state expanded)
+Best solution uses 28 ticks
+Expanded 2238 states in 74.6187 ms (0.0333417 ms per state expanded)
+Best solution uses 11 ticks
+Expanded 396 states in 11.6173 ms (0.0293366 ms per state expanded)
+Best solution uses 22 ticks
+Expanded 27479 states in 1113.82 ms (0.0405335 ms per state expanded)
+Best solution uses 29 ticks
+Expanded 1290 states in 38.9209 ms (0.0301712 ms per state expanded)
+
+Best solution uses 8 tAicks
+Expanded 34 states in 0.781841 ms (0.0229953 ms per state expanded)
+Best solution uses 23 ticks
+Expanded 4222 states in 102.523 ms (0.0242832 ms per state expanded)
+Best solution uses 20 ticks
+Expanded 5207 states in 141.056 ms (0.0270897 ms per state expanded)
+Best solution uses 25 ticks
+Expanded 12011 states in 316.037 ms (0.0263123 ms per state expanded)
+Best solution uses 28 ticks
+Expanded 2238 states in 61.2545 ms (0.0273702 ms per state expanded)
+Best solution uses 11 ticks
+Expanded 396 states in 9.86227 ms (0.0249047 ms per state expanded)
+Best solution uses 22 ticks
+Expanded 27479 states in 899.92 ms (0.0327494 ms per state expanded)
+Best solution uses 29 ticks
+Expanded 1290 states in 34.7217 ms (0.0269161 ms per state expanded)

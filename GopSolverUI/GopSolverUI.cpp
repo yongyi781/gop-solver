@@ -17,6 +17,7 @@ HWND hPlayButton;
 HWND hCopyButton;
 HWND hCopyUrlButton;
 HWND hNumExpandedLabel;
+HWND hHeuristicCostLabel;
 const TCHAR* playSymbol = _T("\u25b6");
 const TCHAR* stopSymbol = _T("\u25a0");
 const int PANEL_INITIALWIDTH = 300;
@@ -26,13 +27,13 @@ HBRUSH blackBrush;
 HBRUSH playerIdleBrush;
 HBRUSH playerDraggingBrush;
 HBRUSH playerAttractingBrush;
-HBRUSH orbBrush;
-HBRUSH orbHighlightBrush;
+HBRUSH orbBrushes[3];
+HBRUSH orbHighlightBrushes[3];
 HBRUSH stateBrushes[9];
 GameState gs;
 GameState tempGs;
 std::vector<std::deque<std::pair<GameState, GameAction>>> solutions;
-bool isPlaying;
+bool isSolutionPlaying;
 int solutionIndex = -1;
 int solutionPathIndex = -1;
 int currentAltar = 1;
@@ -169,11 +170,15 @@ void DrawGrid(HDC hdc, const RECT& rcClient)
 {
 	FillRect(hdc, &rcClient, blackBrush);
 	for (int8_t y = -GRID_MAX; y <= GRID_MAX; ++y)
+	{
 		for (int8_t x = -GRID_MAX; x <= GRID_MAX; ++x)
-		FillSquare(hdc, x, y, stateBrushes[(int)GopBoard::get(x, y)]);
+			FillSquare(hdc, x, y, stateBrushes[(int)GopBoard::get(x, y)]);
+	}
 	for (size_t i = 0; i < gs.orbs.size(); ++i)
+	{
 		if (gs.orbs[i].location != Point::invalid)
-		FillSquare(hdc, gs.orbs[i].location, gs.player.currentOrb == (int)i && gs.orbs[i].target != Point::invalid ? orbHighlightBrush : orbBrush);
+			FillSquare(hdc, gs.orbs[i].location, gs.player.currentOrb == (int)i && gs.orbs[i].target != Point::invalid ? orbHighlightBrushes[i] : orbBrushes[i]);
+	}
 	FillSquare(hdc, gs.player.location, gs.player.action.getType() == GameActionType::Attract ? gs.player.currentOrb != -1 ? playerAttractingBrush : playerDraggingBrush : playerIdleBrush);
 
 	// Finally, mini-pillars and walls.
@@ -210,8 +215,11 @@ void InitializeBrushes()
 	playerIdleBrush = CreateSolidBrush(RGB(0, 128, 0));
 	playerDraggingBrush = CreateSolidBrush(RGB(0, 128, 128));
 	playerAttractingBrush = CreateSolidBrush(RGB(0, 255, 255));
-	orbBrush = CreateSolidBrush(RGB(255, 255, 0));
-	orbHighlightBrush = CreateSolidBrush(RGB(255, 255, 204));
+	orbBrushes[0] = CreateSolidBrush(RGB(255, 255, 0));
+	orbHighlightBrushes[0] = CreateSolidBrush(RGB(255, 255, 128));
+	orbBrushes[1] = CreateSolidBrush(RGB(255, 128, 0));
+	orbHighlightBrushes[1] = CreateSolidBrush(RGB(255, 128, 128));
+	// TODO: orbBrushes[2]
 	stateBrushes[0] = CreateSolidBrush(RGB(34, 34, 34));	// Floor
 	stateBrushes[1] = blackBrush;							// Wall
 	stateBrushes[2] = CreateSolidBrush(RGB(68, 68, 68));	// Rock
@@ -219,12 +227,15 @@ void InitializeBrushes()
 	stateBrushes[4] = stateBrushes[5] = stateBrushes[6] = stateBrushes[7] = stateBrushes[8] = stateBrushes[0];
 }
 
-void InitializeControls(HWND hWnd)
+void InitializeFontAndControls(HWND hWnd)
 {
+	// Initialize font
 	NONCLIENTMETRICS ncm;
 	ncm.cbSize = sizeof(NONCLIENTMETRICS);
 	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
 	hWindowFont = CreateFontIndirect(&ncm.lfMessageFont);
+
+	// Initialize controls
 	hSolutionsListBox = CreateWindow(_T("ListBox"), _T("Hello"),
 		WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, 0, 0,
 		1, 1, hWnd, NULL, hInst, NULL);
@@ -235,6 +246,8 @@ void InitializeControls(HWND hWnd)
 	hCopyUrlButton = CreateWindow(_T("Button"), _T("Copy &URL"), WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0,
 		75, 23, hWnd, (HMENU)IDB_COPYURL, hInst, NULL);
 	hNumExpandedLabel = CreateWindow(_T("Static"), _T("Number of nodes explored: "), WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0,
+		200, 19, hWnd, NULL, hInst, NULL);
+	hHeuristicCostLabel = CreateWindow(_T("Static"), _T("Heuristic cost: "), WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0,
 		200, 19, hWnd, NULL, hInst, NULL);
 }
 
@@ -262,9 +275,9 @@ void SetCurrentAltar(HWND hWnd, int id)
 	currentAltar = id - ID_ALTAR_AIR + 1;
 }
 
-void SetPlaying(bool play)
+void SetSolutionPlaying(bool play)
 {
-	isPlaying = play;
+	isSolutionPlaying = play;
 	Button_SetText(hPlayButton, play ? stopSymbol : playSymbol);
 	if (!play)
 	{
@@ -342,7 +355,7 @@ void DoSolve()
 {
 	gs.freeze();
 	int numExpanded;
-	auto nodes = Solver::solve(gs, &numExpanded, IsDebuggerPresent());
+	auto nodes = Solver::solve(gs, &numExpanded, IsDebuggerPresent() != 0);
 	SetWindowText(hNumExpandedLabel, (_T("Number of nodes explored: ") + std::to_wstring(numExpanded)).c_str());
 	solutions.clear();
 	for (const auto& node : nodes)
@@ -351,12 +364,12 @@ void DoSolve()
 	solutionIndex = 0;
 	solutionPathIndex = 1;
 	tempGs = gs;
-	SetPlaying(true);
+	SetSolutionPlaying(true);
 }
 
 void CALLBACK TimerProc(HWND hWnd, UINT, UINT_PTR, DWORD)
 {
-	if (!isPlaying || solutionIndex == -1 || solutionPathIndex == -1)
+	if (!isSolutionPlaying || solutionIndex == -1 || solutionPathIndex == -1)
 	{
 		gs.step();
 		if (gs.player.action.getType() == GameActionType::Attract)
@@ -371,8 +384,9 @@ void CALLBACK TimerProc(HWND hWnd, UINT, UINT_PTR, DWORD)
 			gs.step();
 		}
 		else
-			SetPlaying(false);
+			SetSolutionPlaying(false);
 	}
+	SetWindowText(hHeuristicCostLabel, (_T("Heuristic cost: ") + std::to_wstring(gs.getHeuristicCost())).c_str());
 	InvalidateRect(hWnd, NULL, false);
 }
 
@@ -398,7 +412,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		hWindow = hWnd;
 		InitializeBrushes();
-		InitializeControls(hWnd);
+		InitializeFontAndControls(hWnd);
 		SetCurrentAltar(hWnd, ID_ALTAR_AIR);
 		gs = GameState(Player(Point(0, -2)), { Orb(Point(-9, -3)) });
 		SetTimer(hWnd, 1, 600, TimerProc);
@@ -411,7 +425,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case IDB_PLAY:
 			LoadCurrentSolution();
-			SetPlaying(!isPlaying);
+			SetSolutionPlaying(!isSolutionPlaying);
 			break;
 		case IDB_COPY:
 			CopyCurrentSolution();
@@ -430,6 +444,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_ALTAR_FIRE:
 		case ID_ALTAR_BODY:
 			SetCurrentAltar(hWnd, wmId);
+			break;
+		case ID_ORBS_1:
+			if (gs.orbs.size() > 1)
+				gs.orbs.erase(gs.orbs.begin() + 1);
+			break;
+		case ID_ORBS_2:
+			if (gs.orbs.size() < 2)
+				gs.orbs.push_back(Orb({ 6, -1 }));
 			break;
 		case ID_ALTAR_SOLVE:
 			DoSolve();
@@ -509,6 +531,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		SetWindowPos(hCopyButton, NULL, gridUISize + panelWidth / 2 - 26, height - 34, 75, 23, SWP_SHOWWINDOW);
 		SetWindowPos(hCopyUrlButton, NULL, gridUISize + panelWidth / 2 - 26 + 78, height - 34, 75, 23, SWP_SHOWWINDOW);
 		SetWindowPos(hNumExpandedLabel, NULL, 11, height - 29, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE);
+		SetWindowPos(hHeuristicCostLabel, NULL, 221, height - 29, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE);
 	}
 	break;
 	case WM_PAINT:
