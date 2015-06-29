@@ -271,9 +271,10 @@ void doSolverBenchmarks(bool heuristicsOnly = false)
 
 int _tmain()
 {
-	//doSolverBenchmarks(true);
-	testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 7, 5 } } } }, "*AA*BB*A-*B--");
-	testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -12,-10 } },{ { 8,4 } } } }, "*BB(1,-3)[2]*B(-3,-2)[2]*AAA*B*AAAA(-7,-4){q}*AAAA--");
+	//doSolverBenchmarks(false);
+	//testHeuristic("..\\GopSolverLib\\air.txt", { { { 0, -2 } },{ { { -7, 5 } },{ { 7, 5 } } } }, "*AA*BB*A-*B--");
+	//testHeuristic("..\\GopSolverLib\\mind.txt", { { { 0,-2 } },{ { { -12,-10 } },{ { 8,4 } } } }, "*BB(1,-3)[2]*B(-3,-2)[2]*AAA*B*AAAA(-7,-4){q}*AAAA--");
+	testHeuristic("..\\GopSolverLib\\air.txt", { { { -2,0 } },{ { { -8,1 } },{ { -3,-8 } } } }, "(-3,-2){q}*A{q}A(-7,0)*BBB{q}*A{q}(-5,-1){q}*B{q}BB*A{q}A*B-*A");
 
 	std::cout << "Press any key to continue . . . ";
 	std::cin.get();

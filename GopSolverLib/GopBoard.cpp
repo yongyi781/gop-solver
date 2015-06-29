@@ -490,7 +490,7 @@ bool GopBoard::willOrbScore(const Orb& orb)
 	if (orb.target == orb.location || orb.target == Point::invalid)
 		return isAdjacentToAltar(orb.location);
 
-	if (isAdjacentToAltar(orb.target))
+	if (isAdjacentToAltar(orb.location) || isAdjacentToAltar(orb.target))
 		return true;
 
 	// If not one of the above, then it means that orb will move to altar in the middle of its path...

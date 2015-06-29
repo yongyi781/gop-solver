@@ -59,7 +59,7 @@ bool Solver::isStateInGoal(const GameState& s)
 {
 	for (const Orb& orb : s.orbs)
 		if (!GopBoard::isAdjacentToAltar(orb.location))
-			return false;
+		return false;
 	return true;
 }
 
@@ -104,36 +104,41 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 		// Idle for a tick
 		addIfNotVisited(agenda, visitedCosts, node->state, GameAction::idle(), node, node->cost + 1, 1);
 
-		// If orbs are about to score, the rest of the actions should be idle.
-		if (!std::all_of(std::begin(orbs), std::end(orbs), [](const Orb& orb) { return GopBoard::willOrbScore(orb); }))
+		bool allOrbsScoring = true;
+		for (int i = 0; i < (int)orbs.size(); ++i)
 		{
-			for (int i = 0; i < (int)orbs.size(); ++i)
+			// If orb is about to score, don't need to touch it again!
+			if (!GopBoard::willOrbScore(orbs[i]))
 			{
-				// If orb is about to score, don't need to touch it again!
-				if (!GopBoard::willOrbScore(orbs[i]))
-				{
-					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, false, false), node, node->cost + 1, 1);
-					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, false, false), node, node->cost + 1, 1);
-					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, false, true), node, node->cost + 1, 1);
-					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, false, true), node, node->cost + 1, 1);
-					// Repel variants
-					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, true, false), node, node->cost + 1, 1);
-					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, true, false), node, node->cost + 1, 1);
-					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, true, true), node, node->cost + 1, 1);
-					addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, true, true), node, node->cost + 1, 1);
-				}
-			}
+				allOrbsScoring = false;
 
+				addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, false, false), node, node->cost + 1, 1);
+				addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, false, false), node, node->cost + 1, 1);
+				addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, false, true), node, node->cost + 1, 1);
+				addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, false, true), node, node->cost + 1, 1);
+				// Repel variants
+				addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, true, false), node, node->cost + 1, 1);
+				addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, true, false), node, node->cost + 1, 1);
+				addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, false, true, true), node, node->cost + 1, 1);
+				addIfNotVisited(agenda, visitedCosts, node->state, GameAction::attract(i, true, true, true), node, node->cost + 1, 1);
+			}
+		}
+
+		// If all orbs are scoring, don't do anything else.
+		if (!allOrbsScoring)
+		{
 			// All possible places to move, always running and not repelling
 
 			// Toggle run if walking
 			bool toggleRun = !node->state.player.run;
 			// Change wand if repelling
 			bool changeWand = node->state.player.repel;
-			for (const Point& next : GopBoard::getNeighbors(node->state.player.location, PathMode::Player))
-				for (const Point& next2 : GopBoard::getNeighbors(next, PathMode::Player))
+			for (const Point& next : GopBoard::getNeighbors(node->state.player.location, PathMode::Player)) {
+				for (const Point& next2 : GopBoard::getNeighbors(next, PathMode::Player)) {
 					if (next2 != node->state.player.location)
 						addIfNotVisited(agenda, visitedCosts, node->state, GameAction::move(next2, toggleRun, changeWand), node, node->cost + 1, 1);
+				}
+			}
 		}
 	}
 
