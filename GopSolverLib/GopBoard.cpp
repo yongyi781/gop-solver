@@ -467,6 +467,7 @@ std::list<Point>& GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 	return cache[key];
 }
 
+// Returns the player path as an iterator pair instead of a reference to a list.
 GopBoard::path_iterator_pair GopBoard::getPlayerPath2(Point p1, Point p2, bool clickOrb)
 {
 	auto& path = getPlayerPath(p1, p2, clickOrb);

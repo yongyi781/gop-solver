@@ -215,11 +215,12 @@ void InitializeBrushes()
 	playerIdleBrush = CreateSolidBrush(RGB(0, 128, 0));
 	playerDraggingBrush = CreateSolidBrush(RGB(0, 128, 128));
 	playerAttractingBrush = CreateSolidBrush(RGB(0, 255, 255));
-	orbBrushes[0] = CreateSolidBrush(RGB(255, 255, 0));
+	orbBrushes[0] = CreateSolidBrush(RGB(220, 220, 0));
 	orbHighlightBrushes[0] = CreateSolidBrush(RGB(255, 255, 128));
 	orbBrushes[1] = CreateSolidBrush(RGB(255, 128, 0));
-	orbHighlightBrushes[1] = CreateSolidBrush(RGB(255, 128, 128));
-	// TODO: orbBrushes[2]
+	orbHighlightBrushes[1] = CreateSolidBrush(RGB(255, 160, 96));
+	orbBrushes[2] = CreateSolidBrush(RGB(255, 0, 0));
+	orbHighlightBrushes[2] = CreateSolidBrush(RGB(255, 128, 128));
 	stateBrushes[0] = CreateSolidBrush(RGB(34, 34, 34));	// Floor
 	stateBrushes[1] = blackBrush;							// Wall
 	stateBrushes[2] = CreateSolidBrush(RGB(68, 68, 68));	// Rock
@@ -507,8 +508,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			gs.freeze();
 			if (gs.orbs.size() < 2)
-				gs.orbs.push_back(Orb());
+				gs.orbs.push_back(Orb{});
 			gs.orbs[1].location = p;
+			// Try third orb
+			//if (gs.orbs.size() < 3)
+			//	gs.orbs.push_back(Orb{});
+			//gs.orbs[2].location = { -6, 2 };
 		}
 		SetFocus(hWnd);
 	}
