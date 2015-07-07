@@ -375,7 +375,7 @@ bool GameState::needsToMoveForOrb(const Orb& orb) const
 {
 	return !GopBoard::willOrbScore(orb)
 		&& orb.target == Point::invalid
-		&& !GopBoard::canReach(player.location, orb.location, player.repel);
+		&& !GopBoard::canReach(player.location, orb.location, false);
 }
 
 int GameState::getHeuristicCostSingleOrb(const Orb& orb) const
