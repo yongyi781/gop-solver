@@ -471,59 +471,9 @@ int GameState::getHeuristicCost() const
 	}
 	else if (orbs.size() == 3)
 	{
-		bool will0Score = GopBoard::willOrbScore(orbs[0]),
-			will1Score = GopBoard::willOrbScore(orbs[1]);
-
-		if (will0Score && will1Score)
-			return std::max(GopBoard::distanceToAltar(orbs[0].location), GopBoard::distanceToAltar(orbs[1].location));
-		if (will0Score)
-		{
-			// Don't have to attract orb 0 again
-			h = getHeuristicCostSingleOrb(orbs[1]);
-			if (player.delayAttractFromPrototick && player.currentOrb != 1)
-				h += 1;
-			return std::max(h, GopBoard::distanceToAltar(orbs[0].location));
-		}
-		if (will1Score)
-		{
-			// Don't have to attract orb 1 again
-			h = getHeuristicCostSingleOrb(orbs[0]);
-			if (player.delayAttractFromPrototick && player.currentOrb != 0)
-				h += 1;
-			return std::max(h, GopBoard::distanceToAltar(orbs[1].location));
-		}
-
-		// Needs to move for both orbs
-		bool needsToMoveFor0 = needsToMoveForOrb(orbs[0]);
-		bool needsToMoveFor1 = needsToMoveForOrb(orbs[1]);
-		if (needsToMoveFor0 && needsToMoveFor1)
-		{
-			int distanceToReachable = std::min(
-				GopBoard::distanceToReachable(player.location, orbs[0].location, player.repel),
-				GopBoard::distanceToReachable(player.location, orbs[1].location, player.repel));
-			h += (1 + distanceToReachable) / 2;
-		}
-		else if (needsToMoveFor0)
-		{
-			int distanceToReachable = GopBoard::distanceToReachable(player.location, orbs[0].location, player.repel);
-			h += (1 + distanceToReachable) / 2;
-		}
-		else if (needsToMoveFor1)
-		{
-			int distanceToReachable = GopBoard::distanceToReachable(player.location, orbs[1].location, player.repel);
-			h += (1 + distanceToReachable) / 2;
-		}
-
-		Point nextLocation0 = GopBoard::nextOrbLocation(orbs[0].location, orbs[0].target),
-			nextLocation1 = GopBoard::nextOrbLocation(orbs[1].location, orbs[1].target);
-
-		int distances[] = {
-			GopBoard::distanceToAltar(nextLocation0),
-			GopBoard::distanceToAltar(nextLocation1)
-		};
-
-		h += getTwoTickHoldCost(distances, player.currentOrb, player.delayAttractFromPrototick);
-		h += GopBoard::distanceToAltar(GopBoard::nextOrbLocation(orbs[2].location, orbs[2].target));
+		return std::max(
+			std::max(getHeuristicCostSingleOrb(orbs[0]), getHeuristicCostSingleOrb(orbs[1])),
+			getHeuristicCostSingleOrb(orbs[2]));
 	}
 
 	return h;
