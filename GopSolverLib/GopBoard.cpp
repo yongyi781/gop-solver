@@ -123,14 +123,14 @@ void GopBoard::calculateTables()
 				Point p = Point(x, y);
 				for (const Point& offset : Point::offsets)
 					if (canMove(p, offset, (PathMode)i, true))
-						neighbors[i][p].push_back(p + offset);
+					neighbors[i][p].push_back(p + offset);
 			}
 		}
 	}
 
 	for (int y = 0; y < GRID_SIZE; ++y)
 		for (int x = 0; x < GRID_SIZE; ++x)
-			distancesToAltarTable.data[y][x] = numeric_limits<int>::max();
+		distancesToAltarTable.data[y][x] = numeric_limits<int>::max();
 
 	queue<pair<Point, int>> agenda;
 	GopArray<bool> visited;
@@ -241,10 +241,10 @@ bool GopBoard::canMove(Point p, Point d, PathMode mode, bool calculate)
 			result = false;
 		else if (d.x == d.y)
 			result = !((!canMoveWest({ p.x + ddx, p.y + ddy }, mode) && !canMoveSouth({ p.x + ddx, p.y + ddy }, mode)) ||
-			(!canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode) && !canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode)));
+				(!canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode) && !canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode)));
 		else
 			result = !((!canMoveWest({ p.x + ddx, p.y + ddy }, mode) && !canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode)) ||
-			(!canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode) && !canMoveSouth({ p.x + ddx, p.y + ddy }, mode)));
+				(!canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode) && !canMoveSouth({ p.x + ddx, p.y + ddy }, mode)));
 	}
 	else
 	{
@@ -252,9 +252,9 @@ bool GopBoard::canMove(Point p, Point d, PathMode mode, bool calculate)
 			result = false;
 		else
 			result = canMoveWest({ p.x + ddx, p.y + ddy }, mode)
-					&& canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode)
-					&& canMoveSouth({ p.x + ddx, p.y + ddy }, mode)
-					&& canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode);
+			&& canMoveWest({ p.x + ddx, p.y + ddy - 1 }, mode)
+			&& canMoveSouth({ p.x + ddx, p.y + ddy }, mode)
+			&& canMoveSouth({ p.x + ddx - 1, p.y + ddy }, mode);
 	}
 
 	grid[p] = old;
@@ -335,6 +335,25 @@ bool GopBoard::canReach(Point p1, Point p2, bool repel)
 	return true;
 }
 
+bool GopBoard::willMoveOrb(Point pPlayer, Point pOrb, bool repel)
+{
+	double mabs = abs((double)(pOrb.y - pPlayer.y) / (pOrb.x - pPlayer.x));
+	int8_t dx, dy;
+	if (repel)
+	{
+		dx = pOrb.x == pPlayer.x ? 0 : pOrb.x > pPlayer.x ? 1 : -1;
+		dy = pOrb.y == pPlayer.y ? 0 : pOrb.y > pPlayer.y ? 1 : -1;
+	}
+	else
+	{
+		dx = abs(pOrb.x - pPlayer.x) <= 1 ? 0 : pOrb.x > pPlayer.x ? -1 : 1;
+		dy = abs(pOrb.y - pPlayer.y) <= 1 ? 0 : pOrb.y > pPlayer.y ? -1 : 1;
+	}
+	return !((mabs > 2 && !canMove(pOrb, { 0, dy }, PathMode::Orb)) ||
+		(mabs < 0.5 && !canMove(pOrb, { dx, 0 }, PathMode::Orb)) ||
+		(!canMove(pOrb, { dx, 0 }, PathMode::Orb) && !canMove(pOrb, { 0, dy }, PathMode::Orb)));
+}
+
 int GopBoard::distanceToAltar(Point p)
 {
 	return distancesToAltarTable[p];
@@ -348,27 +367,27 @@ int GopBoard::distanceToPoint(Point p1, Point p2)
 	return -1;
 }
 
-int GopBoard::distanceToReachable(Point p1, Point p2, bool repel)
+int GopBoard::distanceToReachable(Point pPlayer, Point pOrb, bool repel, bool requireOrbMove)
 {
-	if (p1 == p2)
+	if (pPlayer == pOrb)
 		return 1;	// Must move away from orb!
 
-	auto iter = distanceToReachableCache.find({ p1, p2 });
+	auto iter = distanceToReachableCache.find({ pPlayer, pOrb });
 	if (iter != distanceToReachableCache.end())
 		return iter->second;
 
 	queue<pair<Point, int>> q;
 	GopArray<bool> visited;
-	visited[p1] = true;
-	q.push({ p1, 0 });
+	visited[pPlayer] = true;
+	q.push({ pPlayer, 0 });
 	while (!q.empty())
 	{
 		auto curr = q.front();
 		q.pop();
 
-		if (canReach(curr.first, p2, repel))
+		if (canReach(curr.first, pOrb, repel) && (!requireOrbMove || willMoveOrb(curr.first, pOrb, repel)))
 		{
-			distanceToReachableCache[{p1, p2}] = curr.second;
+			distanceToReachableCache[{pPlayer, pOrb}] = curr.second;
 			return curr.second;
 		}
 
@@ -382,7 +401,7 @@ int GopBoard::distanceToReachable(Point p1, Point p2, bool repel)
 		}
 	}
 
-	distanceToReachableCache[{p1, p2}] = std::numeric_limits<int>::max();
+	distanceToReachableCache[{pPlayer, pOrb}] = std::numeric_limits<int>::max();
 	return std::numeric_limits<int>::max();
 }
 
@@ -427,7 +446,7 @@ std::list<Point>& GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 	GopArray<Point> parents;
 	for (int y = 0; y < GRID_SIZE; ++y)
 		for (int x = 0; x < GRID_SIZE; ++x)
-			parents.data[y][x] = Point::invalid;
+		parents.data[y][x] = Point::invalid;
 	parents[p1] = Point::zero;
 	int minDist = INT_MAX;
 	Point best = Point::invalid;
@@ -471,19 +490,7 @@ std::list<Point>& GopBoard::getPlayerPath(Point p1, Point p2, bool clickOrb)
 GopBoard::path_iterator_pair GopBoard::getPlayerPath2(Point p1, Point p2, bool clickOrb)
 {
 	auto& path = getPlayerPath(p1, p2, clickOrb);
-	return { path.cbegin(), path.cend() };
-}
-
-string GopBoard::gridStr()
-{
-	ostringstream ostr;
-	for (int8_t y = 0; y < GRID_SIZE; ++y)
-	{
-		for (int8_t x = 0; x < GRID_SIZE; ++x)
-			ostr << (int)grid.get(x, y);
-		ostr << endl;
-	}
-	return ostr.str();
+	return{ path.cbegin(), path.cend() };
 }
 
 bool GopBoard::willOrbScore(const Orb& orb)

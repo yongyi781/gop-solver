@@ -32,14 +32,15 @@ public:
 	static Point getOrbOffset(Point diff, bool toPlayer = false);
 	static Point nextOrbLocation(Point location, Point target);
 	static bool canReach(Point p1, Point p2, bool repel = false);
+	// Returns whether the orb will move if attracted (or repelled) from a given position.
+	static bool willMoveOrb(Point pPlayer, Point pOrb, bool repel = false);
 	static int distanceToAltar(Point p);
 	static int distanceToPoint(Point p1, Point p2);
 	// Distance to any square that can reach this orb.
-	static int distanceToReachable(Point p1, Point p2, bool repel = false);
+	static int distanceToReachable(Point pPlayer, Point pOrb, bool repel = false, bool requireOrbMove = false);
 	static bool isAdjacentToAltar(Point p);
 	static std::list<Point>& getPlayerPath(Point p1, Point p2, bool clickOrb = false);
 	static path_iterator_pair getPlayerPath2(Point p1, Point p2, bool clickOrb = false);
-	static std::string gridStr();
 	static bool willOrbScore(const Orb & orb);
 	static const std::vector<Point>& getNeighbors(Point p, PathMode mode);
 

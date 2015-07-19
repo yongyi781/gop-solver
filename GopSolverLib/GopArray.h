@@ -18,5 +18,17 @@ public:
 				data[y][x] = T();
 	}
 
+	std::string toString(std::string delim = "")
+	{
+		std::ostringstream ostr;
+		for (int8_t y = GRID_MAX; y >= -GRID_MAX; --y)
+		{
+			for (int8_t x = -GRID_MAX; x <= GRID_MAX; ++x)
+				ostr << (int)get(x, y) << delim;
+			ostr << "\n";
+		}
+		return ostr.str();
+	}
+
 	T data[GRID_SIZE][GRID_SIZE];
 };
