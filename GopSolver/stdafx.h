@@ -16,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <numeric>
 #include <random>
 #include <map>
 #include <memory>
