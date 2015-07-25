@@ -292,8 +292,13 @@ void doAverageSolvingCosts(int altar, Point playerLocation, std::function<bool(P
 	out << "Average cost from " << playerLocation.toString() << ": " << (double)costSum / filteredSpawns.size() << endl;
 }
 
-GopArray<int> getPars(int altar, Point playerLocation)
+GopArray<std::shared_ptr<GopArray<int>>> altarPars[6];
+
+const GopArray<int>& getPars(int altar, Point playerLocation)
 {
+	if (altarPars[altar][playerLocation])
+		return *altarPars[altar][playerLocation];
+
 	GopArray<int> grid;
 	std::string tag = altarNames[altar] + playerLocation.toString();
 	std::string fileName = "pars\\" + tag + ".txt";
@@ -326,22 +331,65 @@ GopArray<int> getPars(int altar, Point playerLocation)
 		grid[p] = atoi(m[5].str().c_str());
 	} while (str[0] == 'S');
 
-	return grid;
+	altarPars[altar][playerLocation] = std::make_shared<GopArray<int>>(grid);
+	return *altarPars[altar][playerLocation];
 }
 
-void writeParSpreadsheetOutput(GopArray<int> grid)
+int sum(GopArray<int> grid)
+{
+	return std::accumulate(&grid.data[0][0], &grid.data[GRID_SIZE - 1][GRID_SIZE - 1], 0);
+}
+
+template<class T>
+void writeParSpreadsheetOutput(GopArray<T> grid)
 {
 	GopArray<std::string> stringGrid;
 	for (int8_t y = -GRID_MAX; y <= GRID_MAX; y++)
 	{
 		for (int8_t x = -GRID_MAX; x <= GRID_MAX; x++)
 		{
-			int value = grid.get(x, y);
+			T value = grid.get(x, y);
 			stringGrid.set(x, y, value == 0 ? "" : std::to_string(value));
 		}
 	}
 	std::ofstream fout("out.txt");
 	fout << stringGrid.toString("\t") << endl;
+}
+
+template<>
+void writeParSpreadsheetOutput(GopArray<std::string> grid)
+{
+	std::ofstream fout("out.txt");
+	fout << grid.toString("\t") << endl;
+}
+
+GopArray<std::string> getGopMinGridWhichPlayer(int altar, std::vector<Point> playerLocations)
+{
+	std::vector<GopArray<int>> grids;
+	for (Point loc : playerLocations)
+		grids.push_back(getPars(altar, loc));
+
+	GopArray<std::string> whichPlayerGrid;
+	for (int8_t y = -GRID_MAX; y <= GRID_MAX; y++)
+	{
+		for (int8_t x = -GRID_MAX; x <= GRID_MAX; x++)
+		{
+			Point p{ x,y };
+			int min;
+			if (playerLocations.size() == 2)
+				min = std::min({ grids[0][p], grids[1][p] });
+			else if (playerLocations.size() == 3)
+				min = std::min({ grids[0][p], grids[1][p], grids[2][p] });
+			else if (playerLocations.size() == 4)
+				min = std::min({ grids[0][p], grids[1][p], grids[2][p], grids[3][p] });
+			if (min == 0)
+				continue;
+			for (int i = 0; i < grids.size(); i++)
+				if (grids[i][p] == min)
+					whichPlayerGrid[p] += std::to_string(i + 1);
+		}
+	}
+	return whichPlayerGrid;
 }
 
 GopArray<int> getGopMinGrid(int altar, std::vector<Point> playerLocations)
@@ -350,36 +398,249 @@ GopArray<int> getGopMinGrid(int altar, std::vector<Point> playerLocations)
 	for (Point loc : playerLocations)
 		grids.push_back(getPars(altar, loc));
 
-	GopArray<int> minGrid;
+	GopArray<int> grid;
 	for (int8_t y = -GRID_MAX; y <= GRID_MAX; y++)
 	{
 		for (int8_t x = -GRID_MAX; x <= GRID_MAX; x++)
 		{
 			Point p{ x,y };
-			minGrid[p] = std::min({ grids[0][p], grids[1][p], grids[2][p] });
+			if (playerLocations.size() == 2)
+				grid[p] = std::min({ grids[0][p], grids[1][p] });
+			else
+				grid[p] = std::min({ grids[0][p], grids[1][p], grids[2][p] });
 		}
 	}
-	return minGrid;
+	return grid;
 }
+
+int getGopMinGridSum(int altar, std::vector<Point> playerLocations)
+{
+	std::vector<GopArray<int>> grids;
+	for (Point loc : playerLocations)
+		grids.push_back(getPars(altar, loc));
+
+	int total = 0;
+	for (int8_t y = -GRID_MAX; y <= GRID_MAX; y++)
+	{
+		for (int8_t x = -GRID_MAX; x <= GRID_MAX; x++)
+		{
+			Point p{ x,y };
+			if (playerLocations.size() == 2)
+				total += std::min({ grids[0][p], grids[1][p] });
+			else if (playerLocations.size() == 3)
+				total += std::min({ grids[0][p], grids[1][p], grids[2][p] });
+			else if (playerLocations.size() == 4)
+				total += std::min({ grids[0][p], grids[1][p], grids[2][p], grids[3][p] });
+		}
+	}
+	return total;
+}
+
+void doBestTrioPositions(int altar, int8_t limits = 8)
+{
+	std::vector<Point> points;
+	std::set<std::tuple<int, Point, Point, Point>, std::less<>> values;
+
+	GopBoard::loadAltarFromFile(altarFiles[altar]);
+	for (int8_t x = -limits; x <= limits; x++)
+		for (int8_t y = -limits; y <= limits; y++)
+			if (GopBoard::isPassable({ x, y }, PathMode::Player))
+				points.push_back({ x,y });
+
+	for (Point p1 : points)
+		for (Point p2 : points)
+			for (Point p3 : points)
+			{
+				if (!(p1 < p2 && p2 < p3))
+					continue;
+				values.emplace(getGopMinGridSum(altar, { p1, p2, p3 }), p1, p2, p3);
+			}
+
+	int top = 100;
+	for (auto entry : values)
+	{
+		if (--top <= 0)
+			break;
+		cout << std::get<0>(entry) << ", " << std::get<1>(entry).toString()
+			<< ", " << std::get<2>(entry).toString()
+			<< ", " << std::get<3>(entry).toString() << endl;
+	}
+}
+
+void doBestDuoPositions(int altar, int8_t limits = 8)
+{
+	std::vector<Point> points;
+	std::set<std::tuple<int, Point, Point>, std::less<>> values;
+
+	GopBoard::loadAltarFromFile(altarFiles[altar]);
+	for (int8_t x = -limits; x <= limits; x++)
+	{
+		for (int8_t y = -limits; y <= limits; y++)
+		{
+			if (GopBoard::isPassable({ x, y }, PathMode::Player))
+			{
+				points.push_back({ x,y });
+			}
+		}
+	}
+
+	for (Point p1 : points)
+	{
+		for (Point p2 : points)
+		{
+			if (!(p1 < p2))
+				continue;
+			values.emplace(getGopMinGridSum(altar, { p1, p2 }), p1, p2);
+		}
+	}
+
+	int top = 100;
+	for (auto entry : values)
+	{
+		if (--top <= 0)
+			break;
+		cout << std::get<0>(entry) << ", " << std::get<1>(entry).toString()
+			<< ", " << std::get<2>(entry).toString() << endl;
+	}
+}
+
+void doBestSoloPositions(int altar, int8_t limits = 8)
+{
+	std::vector<Point> points;
+	std::set<std::pair<int, Point>, std::less<>> values;
+
+	GopBoard::loadAltarFromFile(altarFiles[altar]);
+	for (int8_t x = -limits; x <= limits; x++)
+	{
+		for (int8_t y = -limits; y <= limits; y++)
+		{
+			if (GopBoard::isPassable({ x, y }, PathMode::Player))
+			{
+				points.push_back({ x,y });
+			}
+		}
+	}
+
+	for (Point p1 : points)
+	{
+		values.emplace(sum(getPars(altar, { p1 })), p1);
+	}
+
+	cout << "Best solo positions for " << altarNames[altar] << endl;
+	int top = 100;
+	for (auto entry : values)
+	{
+		if (--top <= 0)
+			break;
+		cout << std::get<0>(entry) << ", " << std::get<1>(entry).toString() << endl;
+	}
+}
+
+void doBestQuadPositions(int altar, int8_t limits = 3)
+{
+	std::vector<Point> points;
+	std::set<std::tuple<int, Point, Point, Point, Point>, std::less<>> values;
+
+	GopBoard::loadAltarFromFile(altarFiles[altar]);
+	for (int8_t x = -limits; x <= limits; x++)
+		for (int8_t y = -limits; y <= limits; y++)
+			if (GopBoard::isPassable({ x, y }, PathMode::Player))
+				points.push_back({ x,y });
+
+	for (Point p1 : points)
+		for (Point p2 : points)
+			for (Point p3 : points)
+				for (Point p4 : points)
+				{
+					if (!(p1 < p2 && p2 < p3 && p3 < p4))
+						continue;
+					values.emplace(getGopMinGridSum(altar, { p1, p2, p3, p4 }), p1, p2, p3, p4);
+				}
+
+	int top = 100;
+	for (auto entry : values)
+	{
+		if (--top <= 0)
+			break;
+		cout << std::get<0>(entry) << ", " << std::get<1>(entry).toString()
+			<< ", " << std::get<2>(entry).toString()
+			<< ", " << std::get<3>(entry).toString()
+			<< ", " << std::get<4>(entry).toString() << endl;
+	}
+}
+
+void doBadnessBalance(int altar, std::vector<Point> locations)
+{
+	auto whichPlayer = getGopMinGridWhichPlayer(altar, locations);
+	auto grid = getGopMinGrid(altar, locations);
+	double sum1 = 0, sum2 = 0, sum3 = 0;
+	for (int8_t y = -GRID_MAX; y <= GRID_MAX; y++)
+	{
+		for (int8_t x = -GRID_MAX; x <= GRID_MAX; x++)
+		{
+			Point p{ x,y };
+			if (whichPlayer[p] == "1")
+				sum1 += grid[p];
+			else if (whichPlayer[p] == "2")
+				sum2 += grid[p];
+			else if (whichPlayer[p] == "3")
+				sum3 += grid[p];
+			else if (whichPlayer[p] == "12")
+			{
+				sum2 += grid[p];
+			}
+			else if (whichPlayer[p] == "13")
+			{
+				sum3 += grid[p];
+			}
+			else if (whichPlayer[p] == "23")
+			{
+				sum3 += grid[p];
+			}
+			else if (whichPlayer[p] == "123")
+			{
+				sum3 += grid[p];
+			}
+		}
+	}
+	cout << "Sum 1: " << sum1 << endl << "Sum 2: " << sum2 << endl
+		<< "Sum 3: " << sum3 << endl;
+}
+
+std::vector<Point> bestTrioPositions[]
+{
+	{ Point{ -2,0 }, Point{ 1,-2 }, Point{ 1,2 } },
+	{ Point{ -5,1 }, Point{ 2,-4 }, Point{ 2,1 } },
+	{ Point{ -2,1 }, Point{ 1,-2 }, Point{ 4,3 } },
+	{ Point{ -3,5 }, Point{ -5,-7 }, Point{ 6, -4 } },
+	{ Point{ -2,0 }, Point{ 1,-2 }, Point{ 1,2 } },
+	{ Point{ -2,0 }, Point{ 1,-2 }, Point{ 1,2 } },
+};
+
+std::vector<Point> bestDuoPositions[]
+{
+	{ Point{ 1,-2 }, Point{ 0,2 } },
+	{ Point{ -5,1 }, Point{ 2,-4 } },
+	{ Point{ 1,-2 }, Point{ 1,2 } },
+	{ Point{ -5,1 }, Point{ 4,-2 } },
+	{ Point{ 1,-2 }, Point{ 1,2 } },
+	{ Point{ -2,0 }, Point{ 1, 2 } },
+};
+
+std::vector<Point> bestQuadPositions[]
+{
+	{ Point{ -1,-2 }, Point{1,-2}, Point{2,1}, Point{-1,2} },
+	{ Point{ -5,1 }, Point{ 2,-4 }, Point{ 2,1 } },
+	{ Point{ -2,1 }, Point{ 1,-2 }, Point{ 4,3 } },
+	{ Point{ -3,5 }, Point{ -5,-7 }, Point{ 6, -4 } },
+	{ Point{ -2,0 }, Point{ 1,-2 }, Point{ 1,2 } },
+	{ Point{ -2,0 }, Point{ 1,-2 }, Point{ 1,2 } },
+};
 
 int _tmain()
 {
-	GopBoard::loadAltarFromFile(altarFiles[1]);
-	for (int8_t x = -8; x <= 8; x++)
-	{
-		for (int8_t y = -8; y <= 8; y++)
-		{
-			if (GopBoard::isPassable({ x, y }, PathMode::Player))
-				getPars(1, { x,y });
-		}
-	}
-	GopBoard::loadAltarFromFile(altarFiles[3]);
-	for (int8_t x = -8; x <= 8; x++)
-	{
-		for (int8_t y = -8; y <= 8; y++)
-		{
-			if (GopBoard::isPassable({ x, y }, PathMode::Player))
-				getPars(3, { x,y });
-		}
-	}
+	int altar = 0;
+	//writeParSpreadsheetOutput(getGopMinGridWhichPlayer(altar, bestQuadPositions[altar]));
+	writeParSpreadsheetOutput(getGopMinGridWhichPlayer(4, { { -3, 1}, {-1, -2}, {1, -2}, {2, 1} }));
+	cout << getGopMinGridSum(2, { {0, 2}, {1, -2}, {5, 0} });
 }

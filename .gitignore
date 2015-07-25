@@ -190,3 +190,7 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 *.diagsession
+
+pars/
+out/
+out.txt

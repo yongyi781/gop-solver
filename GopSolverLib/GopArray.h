@@ -38,7 +38,11 @@ public:
 		for (int8_t y = GRID_MAX; y >= -GRID_MAX; --y)
 		{
 			for (int8_t x = -GRID_MAX; x <= GRID_MAX; ++x)
-				ostr << (int8_to_int<T>::type)get(x, y) << delim;
+			{
+				if (x != -GRID_MAX)
+					ostr << delim;
+				ostr << (int8_to_int<T>::type)get(x, y);
+			}
 			ostr << "\n";
 		}
 		return ostr.str();
