@@ -67,7 +67,7 @@ std::vector<std::shared_ptr<GameStateNode>> Solver::solve(const GameState& initi
 {
 	gamestate_queue agenda;
 	agenda.emplace(std::make_shared<GameStateNode>(initialState, GameAction::idle()));
-	std::unordered_map<GameState, int> visitedCosts;
+	std::unordered_map<GameState, int> visitedCosts(200000);
 	int minCost = INT_MAX;
 	std::vector<std::shared_ptr<GameStateNode>> solutions;
 	if (pNumExpanded != nullptr)
