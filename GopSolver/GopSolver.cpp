@@ -44,72 +44,67 @@ time_point<high_resolution_clock> currentTime()
 
 #define SPAWNS mindSpawns
 
-std::mt19937 eng;
-std::uniform_int_distribution<int> dist(0, (int)SPAWNS.size() - 1);
+GopArray<std::shared_ptr<GopArray<int>>> altarPars[6];
 
-int getAirBadness(Point p)
+void doAverageSolvingCosts(int altar, Point playerLocation, std::function<bool(Point)> filter, std::ostream& out)
 {
-	return 0;
+	GopBoard::loadAltarFromFile(altarFiles[altar]);
+	int costSum = 0;
+	int spawnNum = 0;
+	std::vector<Point> filteredSpawns;
+	std::copy_if(std::begin(altarSpawns[altar]), std::end(altarSpawns[altar]), std::back_inserter(filteredSpawns), filter);
+
+	for (auto spawn : filteredSpawns)
+	{
+		GameState initialState{ Player{ playerLocation },{ Orb{ spawn } } };
+		auto solution = Solver::solve(initialState);
+		int cost = solution[0]->cost + 2;
+		out << "Spawn " << ++spawnNum << " of " << filteredSpawns.size() << ": " << spawn.toString() << ", " << cost << std::endl;
+		costSum += cost;
+	}
+
+	out << "Average cost from " << playerLocation.toString() << ": " << (double)costSum / filteredSpawns.size() << endl;
 }
 
-int spawnBadness(int seed, int numSpawns)
+const GopArray<int>& getPars(int altar, Point playerLocation)
 {
-	std::vector<Point> goodPracticeSpawns{ {-14, 12}, {-14, 11}, {-15, 11}, {-14, 9}, {-13, 8}, {-15, 5}, {-14, 7}, {-12, 12}, {-9, 9}, {-10, 10}, {-11, 11}, {-10, 11}, {-14, 10}, {-15, 10} };
+	if (altarPars[altar][playerLocation])
+		return *altarPars[altar][playerLocation];
 
-	eng.seed(seed);
-	int total = 0;
-	for (int i = 0; i < numSpawns; ++i)
+	GopArray<int> grid;
+	std::string tag = altarNames[altar] + playerLocation.toString();
+	std::string fileName = "pars\\" + tag + ".txt";
+	std::ifstream fin(fileName);
+	if (!fin)
 	{
-		Point spawn = SPAWNS[dist(eng)];
-		int distance = GopBoard::distanceToAltar(spawn);
-		total += distance > 10 ? 2 * distance - 1 : distance - 1;
-		if (std::find(std::begin(goodPracticeSpawns), std::end(goodPracticeSpawns), spawn) != goodPracticeSpawns.end())
-			total += 10000;
-
-		//if (spawn == Point(-3, -7))
-		//	total += 3;
-		//else if (spawn == Point(-3, -8))
-		//	total += 3;
-		//else if (spawn == Point(-3, -9))
-		//	total += 3;
-		//else if (spawn == Point(-4, -8))
-		//	total += 3;
-		//else if (spawn == Point(-4, -9))
-		//	total += 3;
-		//else if ((abs(spawn.x) == 1 && abs(spawn.y) == 5) || (abs(spawn.x) == 5 && abs(spawn.y) == 1))
-		//	total += 2;
-		//else if (distance >= 5)
-		//	total += 1;
+		std::cout << "File does not exist. Calculating pars for " << tag << "..." << std::endl;
+		std::ofstream fout(fileName);
+		doAverageSolvingCosts(altar, playerLocation, [](Point) { return true; }, fout);
+		fout.close();
+		fin.open(fileName);
 	}
-	return total;
-}
 
-void findGoodSpawns(std::string altarFile = "..\\GopSolverLib\\air.txt", int numSpawns = 23)
-{
-	GopBoard::loadAltarFromFile(altarFile);
-	std::set<std::pair<int, int>, std::greater<>> badness;
-
-	auto startTime = currentTime();
-	for (int i = 0; i < 10000; ++i)
+	if (!fin)
 	{
-		badness.emplace(spawnBadness(i, numSpawns), i);
-		if (badness.size() >= 100)
-		{
-			auto iter = badness.end();
-			badness.erase(--iter);
-		}
-
-		if (i % 1000000 == 999999)
-		{
-			auto time = currentTime();
-			auto diff = time - startTime;
-			auto seedsPerSecond = (1000000000.0 * (i + 1)) / diff.count();
-			std::cout << seedsPerSecond << " seeds per second; current min = "
-				<< badness.begin()->first << ", seed " << badness.begin()->second << std::endl;
-		}
+		std::cerr << "An error occurred." << std::endl;
+		throw std::exception("An error occurred.");
 	}
-	for (auto& x : badness)
-		std::cout << x.first << ", " << x.second << std::endl;
+
+	std::string str;
+	std::ostringstream ostr;
+	std::regex r{ R"(Spawn (\d+) of (\d+): \((-?\d+),(-?\d+)\), (\d+))" };
+	std::smatch m;
+	do
+	{
+		std::getline(fin, str);
+		if (!std::regex_search(str, m, r))
+			break;
+		Point p{ (int8_t)atoi(m[3].str().c_str()), (int8_t)atoi(m[4].str().c_str()) };
+		grid[p] = atoi(m[5].str().c_str());
+	} while (str[0] == 'S');
+
+	altarPars[altar][playerLocation] = std::make_shared<GopArray<int>>(grid);
+	return *altarPars[altar][playerLocation];
 }
 
 void doReachable()
@@ -272,69 +267,6 @@ void doReachable2(std::string altarFile, const std::vector<Point>& spawns, std::
 	}
 }
 
-void doAverageSolvingCosts(int altar, Point playerLocation, std::function<bool(Point)> filter, std::ostream& out)
-{
-	GopBoard::loadAltarFromFile(altarFiles[altar]);
-	int costSum = 0;
-	int spawnNum = 0;
-	std::vector<Point> filteredSpawns;
-	std::copy_if(std::begin(altarSpawns[altar]), std::end(altarSpawns[altar]), std::back_inserter(filteredSpawns), filter);
-
-	for (auto spawn : filteredSpawns)
-	{
-		GameState initialState{ Player{ playerLocation }, { Orb{ spawn } } };
-		auto solution = Solver::solve(initialState);
-		int cost = solution[0]->cost + 2;
-		out << "Spawn " << ++spawnNum << " of " << filteredSpawns.size() << ": " << spawn.toString() << ", " << cost << std::endl;
-		costSum += cost;
-	}
-
-	out << "Average cost from " << playerLocation.toString() << ": " << (double)costSum / filteredSpawns.size() << endl;
-}
-
-GopArray<std::shared_ptr<GopArray<int>>> altarPars[6];
-
-const GopArray<int>& getPars(int altar, Point playerLocation)
-{
-	if (altarPars[altar][playerLocation])
-		return *altarPars[altar][playerLocation];
-
-	GopArray<int> grid;
-	std::string tag = altarNames[altar] + playerLocation.toString();
-	std::string fileName = "pars\\" + tag + ".txt";
-	std::ifstream fin(fileName);
-	if (!fin)
-	{
-		std::cout << "File does not exist. Calculating pars for " << tag << "..." << std::endl;
-		std::ofstream fout(fileName);
-		doAverageSolvingCosts(altar, playerLocation, [](Point) { return true; }, fout);
-		fout.close();
-		fin.open(fileName);
-	}
-
-	if (!fin)
-	{
-		std::cerr << "An error occurred." << std::endl;
-		throw std::exception("An error occurred.");
-	}
-
-	std::string str;
-	std::ostringstream ostr;
-	std::regex r{ R"(Spawn (\d+) of (\d+): \((-?\d+),(-?\d+)\), (\d+))" };
-	std::smatch m;
-	do
-	{
-		std::getline(fin, str);
-		if (!std::regex_search(str, m, r))
-			break;
-		Point p{ (int8_t)atoi(m[3].str().c_str()), (int8_t)atoi(m[4].str().c_str()) };
-		grid[p] = atoi(m[5].str().c_str());
-	} while (str[0] == 'S');
-
-	altarPars[altar][playerLocation] = std::make_shared<GopArray<int>>(grid);
-	return *altarPars[altar][playerLocation];
-}
-
 int sum(GopArray<int> grid)
 {
 	return std::accumulate(&grid.data[0][0], &grid.data[GRID_SIZE - 1][GRID_SIZE - 1], 0);
@@ -427,13 +359,68 @@ int getGopMinGridSum(int altar, std::vector<Point> playerLocations)
 			Point p{ x,y };
 			if (playerLocations.size() == 2)
 				total += std::min({ grids[0][p], grids[1][p] });
-			else if (playerLocations.size() == 3)
-				total += std::min({ grids[0][p], grids[1][p], grids[2][p] });
+			else if (playerLocations.size() == 3) {
+				total += std::max({ grids[0][p], grids[1][p], grids[2][p] });
+			}
 			else if (playerLocations.size() == 4)
 				total += std::min({ grids[0][p], grids[1][p], grids[2][p], grids[3][p] });
 		}
 	}
 	return total;
+}
+
+int seedBadness(int altar, int seed, int numSpawns, Point startPosition1, Point startPosition2)
+{
+	std::vector<Point> goodPracticeSpawns{ { -14, 12 },{ -14, 11 },{ -15, 11 },{ -14, 9 },{ -13, 8 },{ -15, 5 },{ -14, 7 },{ -12, 12 },{ -9, 9 },{ -10, 10 },{ -11, 11 },{ -10, 11 },{ -14, 10 },{ -15, 10 } };
+
+	const auto& spawns = altarSpawns[altar];
+	std::mt19937 eng;
+	std::uniform_int_distribution<int> dist(0, (int)spawns.size() - 1);
+
+	eng.seed(seed);
+	GopArray<int> pars;
+	if (startPosition2 != Point::invalid)
+		pars = getGopMinGrid(altar, { startPosition1, startPosition2 });
+	else
+		pars = getPars(altar, startPosition1);
+	int total = 0;
+	for (int i = 0; i < numSpawns; ++i)
+	{
+		Point spawn = spawns[dist(eng)];
+		total += pars[spawn];
+		//if (std::find(std::begin(goodPracticeSpawns), std::end(goodPracticeSpawns), spawn) != goodPracticeSpawns.end())
+		//	total += 10000;
+	}
+	return total;
+}
+
+void findGoodSpawns(int altar, int numSpawns, int maxSeed = 10000, Point startPosition1 = { 0, -2 },
+	Point startPosition2 = Point::invalid)
+{
+	GopBoard::loadAltarFromFile(altarFiles[altar]);
+	std::set<std::pair<int, int>, std::greater<>> badness;
+
+	auto startTime = currentTime();
+	for (int i = 0; i < maxSeed; ++i)
+	{
+		badness.emplace(seedBadness(altar, i, numSpawns, startPosition1, startPosition2), i);
+		if (badness.size() >= 100)
+		{
+			auto iter = badness.end();
+			badness.erase(--iter);
+		}
+
+		if (i % 1000000 == 999999)
+		{
+			auto time = currentTime();
+			auto diff = time - startTime;
+			auto seedsPerSecond = (1000000000.0 * (i + 1)) / diff.count();
+			std::cout << seedsPerSecond << " seeds per second; current min = "
+				<< badness.begin()->first << ", seed " << badness.begin()->second << std::endl;
+		}
+	}
+	for (auto& x : badness)
+		std::cout << x.first << ", " << x.second << std::endl;
 }
 
 void doBestTrioPositions(int altar, int8_t limits = 8)
@@ -639,8 +626,10 @@ std::vector<Point> bestQuadPositions[]
 
 int _tmain()
 {
-	int altar = 0;
-	//writeParSpreadsheetOutput(getGopMinGridWhichPlayer(altar, bestQuadPositions[altar]));
-	writeParSpreadsheetOutput(getGopMinGridWhichPlayer(4, { { -3, 1}, {-1, -2}, {1, -2}, {2, 1} }));
-	cout << getGopMinGridSum(2, { {0, 2}, {1, -2}, {5, 0} });
+	findGoodSpawns(0, 62, 100, {2,0}, {-2,0});
+	//doSolverBenchmarks();
+	//int altar = 0;
+	//doBestTrioPositions(1);
+	////writeParSpreadsheetOutput(getGopMinGridWhichPlayer(altar, bestQuadPositions[altar]));
+	//doBestDuoPositions(1);
 }
