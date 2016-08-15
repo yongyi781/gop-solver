@@ -15,7 +15,7 @@ std::vector<Point> fireSpawns{ Point(-8, -7), Point(-5, -7), Point(-8, -6), Poin
 std::vector<Point> newFireSpawns{ Point(-8, -7), Point(-5, -7), Point(-8, -6), Point(-7, -6), Point(-6, -6), Point(-5, -6), Point(-4, -6), Point(-1, -6), Point(2, -6), Point(3, -6), Point(4, -6), Point(-8, -5), Point(-7, -5), Point(-6, -5), Point(-4, -5), Point(-3, -5), Point(-2, -5), Point(-1, -5), Point(0, -5), Point(1, -5), Point(2, -5), Point(3, -5), Point(4, -5), Point(-8, -4), Point(-7, -4), Point(-6, -4), Point(-5, -4), Point(-4, -4), Point(-3, -4), Point(-2, -4), Point(0, -4), Point(2, -4), Point(3, -4), Point(4, -4), Point(5, -4), Point(-9, -3), Point(-8, -3), Point(-7, -3), Point(-6, -3), Point(-5, -3), Point(-4, -3), Point(4, -3), Point(5, -3), Point(6, -3), Point(7, -3), Point(-8, -2), Point(-7, -2), Point(-6, -2), Point(-5, -2), Point(-4, -2), Point(4, -2), Point(5, -2), Point(6, -2), Point(7, -2), Point(-8, -1), Point(-7, -1), Point(-6, -1), Point(-5, -1), Point(5, -1), Point(6, -1), Point(-8, 0), Point(-7, 0), Point(-6, 0), Point(-5, 0), Point(-4, 0), Point(4, 0), Point(5, 0), Point(6, 0), Point(-8, 1), Point(-7, 1), Point(-6, 1), Point(-5, 1), Point(5, 1), Point(6, 1), Point(7, 1), Point(-7, 2), Point(-6, 2), Point(-5, 2), Point(-4, 2), Point(4, 2), Point(5, 2), Point(7, 2), Point(-6, 3), Point(-5, 3), Point(-4, 3), Point(4, 3), Point(5, 3), Point(6, 3), Point(-6, 4), Point(-5, 4), Point(-4, 4), Point(-3, 4), Point(-2, 4), Point(0, 4), Point(2, 4), Point(3, 4), Point(4, 4), Point(5, 4), Point(6, 4), Point(7, 4), Point(-8, 5), Point(-7, 5), Point(-6, 5), Point(-4, 5), Point(-3, 5), Point(-2, 5), Point(-1, 5), Point(0, 5), Point(1, 5), Point(2, 5), Point(3, 5), Point(4, 5), Point(6, 5), Point(7, 5), Point(-8, 6), Point(-7, 6), Point(-6, 6), Point(-5, 6), Point(-4, 6), Point(-3, 6), Point(-2, 6), Point(-1, 6), Point(0, 6), Point(1, 6), Point(2, 6), Point(3, 6), Point(4, 6), Point(5, 6), Point(6, 6), Point(7, 6), Point(-8, 7), Point(-7, 7), Point(-6, 7), Point(-5, 7), Point(-4, 7), Point(-3, 7), Point(-2, 7), Point(-1, 7), Point(0, 7), Point(1, 7), Point(2, 7), Point(3, 7), Point(4, 7), Point(5, 7), Point(-8, 8), Point(-7, 8), Point(-6, 8), Point(-5, 8), Point(-4, 8), Point(-3, 8), Point(-2, 8), Point(-1, 8), Point(0, 8), Point(1, 8), Point(2, 8), Point(4, 8), Point(5, 8), Point(-8, 9), Point(-6, 9), Point(-2, 9), Point(-1, 9), Point(0, 9), Point(1, 9), Point(4, 9), Point(5, 9), Point(6, 9), Point(-8, 10), Point(-7, 10), Point(-6, 10), Point(-5, 10), Point(0, 10), Point(2, 10), Point(3, 10), Point(5, 10), Point(-7, 11), Point(-6, 11), Point(-5, 11), Point(-4, 11), Point(-3, 11), Point(3, 11) };
 std::vector<Point> bodySpawns{ Point(3, -10), Point(-2, -9), Point(-1, -9), Point(2, -9), Point(3, -9), Point(-5, -8), Point(-4, -8), Point(-3, -8), Point(-2, -8), Point(-1, -8), Point(0, -8), Point(1, -8), Point(2, -8), Point(-4, -7), Point(-3, -7), Point(-1, -7), Point(0, -7), Point(1, -7), Point(2, -7), Point(3, -7), Point(5, -7), Point(-6, -6), Point(-5, -6), Point(-4, -6), Point(-3, -6), Point(-2, -6), Point(-1, -6), Point(0, -6), Point(1, -6), Point(2, -6), Point(3, -6), Point(4, -6), Point(5, -6), Point(6, -6), Point(-9, -5), Point(-8, -5), Point(-7, -5), Point(-6, -5), Point(-5, -5), Point(-4, -5), Point(-3, -5), Point(-2, -5), Point(-1, -5), Point(0, -5), Point(1, -5), Point(2, -5), Point(3, -5), Point(4, -5), Point(7, -5), Point(-8, -4), Point(-7, -4), Point(-6, -4), Point(-5, -4), Point(-4, -4), Point(-3, -4), Point(-2, -4), Point(0, -4), Point(2, -4), Point(3, -4), Point(4, -4), Point(5, -4), Point(6, -4), Point(7, -4), Point(-11, -3), Point(-10, -3), Point(-8, -3), Point(-7, -3), Point(-6, -3), Point(-5, -3), Point(-4, -3), Point(4, -3), Point(5, -3), Point(6, -3), Point(7, -3), Point(-10, -2), Point(-9, -2), Point(-8, -2), Point(-7, -2), Point(-6, -2), Point(-5, -2), Point(-4, -2), Point(4, -2), Point(5, -2), Point(6, -2), Point(7, -2), Point(-11, -1), Point(-10, -1), Point(-9, -1), Point(-8, -1), Point(-7, -1), Point(-6, -1), Point(-5, -1), Point(5, -1), Point(6, -1), Point(7, -1), Point(8, -1), Point(-10, 0), Point(-9, 0), Point(-8, 0), Point(-7, 0), Point(-6, 0), Point(-5, 0), Point(-4, 0), Point(4, 0), Point(5, 0), Point(6, 0), Point(7, 0), Point(8, 0), Point(9, 0), Point(-11, 1), Point(-10, 1), Point(-9, 1), Point(-8, 1), Point(-7, 1), Point(-6, 1), Point(-5, 1), Point(5, 1), Point(6, 1), Point(7, 1), Point(8, 1), Point(9, 1), Point(-12, 2), Point(-11, 2), Point(-10, 2), Point(-9, 2), Point(-8, 2), Point(-7, 2), Point(-6, 2), Point(-5, 2), Point(-4, 2), Point(4, 2), Point(5, 2), Point(6, 2), Point(7, 2), Point(8, 2), Point(9, 2), Point(-12, 3), Point(-11, 3), Point(-10, 3), Point(-9, 3), Point(-8, 3), Point(-7, 3), Point(-6, 3), Point(-5, 3), Point(-4, 3), Point(4, 3), Point(5, 3), Point(6, 3), Point(7, 3), Point(8, 3), Point(9, 3), Point(10, 3), Point(-14, 4), Point(-13, 4), Point(-12, 4), Point(-11, 4), Point(-9, 4), Point(-8, 4), Point(-7, 4), Point(-6, 4), Point(-5, 4), Point(-4, 4), Point(-3, 4), Point(-2, 4), Point(0, 4), Point(2, 4), Point(3, 4), Point(4, 4), Point(5, 4), Point(6, 4), Point(7, 4), Point(8, 4), Point(9, 4), Point(10, 4), Point(-16, 5), Point(-15, 5), Point(-14, 5), Point(-13, 5), Point(-11, 5), Point(-10, 5), Point(-9, 5), Point(-8, 5), Point(-7, 5), Point(-6, 5), Point(-5, 5), Point(-4, 5), Point(-3, 5), Point(-2, 5), Point(-1, 5), Point(0, 5), Point(1, 5), Point(2, 5), Point(3, 5), Point(4, 5), Point(5, 5), Point(6, 5), Point(7, 5), Point(8, 5), Point(9, 5), Point(-12, 6), Point(-11, 6), Point(-10, 6), Point(-9, 6), Point(-7, 6), Point(-6, 6), Point(-5, 6), Point(-4, 6), Point(-3, 6), Point(-2, 6), Point(0, 6), Point(1, 6), Point(2, 6), Point(3, 6), Point(4, 6), Point(5, 6), Point(6, 6), Point(7, 6), Point(8, 6), Point(-13, 7), Point(-12, 7), Point(-10, 7), Point(-9, 7), Point(-8, 7), Point(-6, 7), Point(-5, 7), Point(-4, 7), Point(-3, 7), Point(-2, 7), Point(-1, 7), Point(0, 7), Point(1, 7), Point(2, 7), Point(3, 7), Point(4, 7), Point(5, 7), Point(6, 7), Point(7, 7), Point(-5, 8), Point(-3, 8), Point(2, 8), Point(4, 8), Point(5, 8), Point(6, 8), Point(7, 8), Point(7, 9), Point(8, 9) };
 
-std::array<std::vector<Point>, 6> altarSpawns{ airSpawns, newMindSpawns, waterSpawns, newEarthSpawns, newFireSpawns, bodySpawns };
+std::array<std::vector<Point>, 6> altarSpawns{ airSpawns, mindSpawns, waterSpawns, newEarthSpawns, newFireSpawns, bodySpawns };
 std::array<std::string, 6> altarFiles{ "..\\GopSolverLib\\air.txt", "..\\GopSolverLib\\mind.txt", "..\\GopSolverLib\\water.txt" , "..\\GopSolverLib\\earth.txt" , "..\\GopSolverLib\\fire.txt" , "..\\GopSolverLib\\body.txt" };
 std::array<std::string, 6> altarNames{ "air", "mind", "water", "earth", "fire", "body" };
 
@@ -336,10 +336,10 @@ GopArray<int> getGopMinGrid(int altar, std::vector<Point> playerLocations)
 		for (int8_t x = -GRID_MAX; x <= GRID_MAX; x++)
 		{
 			Point p{ x,y };
-			if (playerLocations.size() == 2)
-				grid[p] = std::min({ grids[0][p], grids[1][p] });
-			else
-				grid[p] = std::min({ grids[0][p], grids[1][p], grids[2][p] });
+			//if (playerLocations.size() == 2)
+			grid[p] = std::min({ grids[0][p], grids[1][p] });
+			//else
+			//	grid[p] = std::min({ grids[0][p], grids[1][p], grids[2][p] });
 		}
 	}
 	return grid;
@@ -369,20 +369,15 @@ int getGopMinGridSum(int altar, std::vector<Point> playerLocations)
 	return total;
 }
 
-int seedBadness(int altar, int seed, int numSpawns, Point startPosition1, Point startPosition2)
+int seedBadness(int altar, int seed, int numSpawns, GopArray<int> pars)
 {
-	std::vector<Point> goodPracticeSpawns{ { -14, 12 },{ -14, 11 },{ -15, 11 },{ -14, 9 },{ -13, 8 },{ -15, 5 },{ -14, 7 },{ -12, 12 },{ -9, 9 },{ -10, 10 },{ -11, 11 },{ -10, 11 },{ -14, 10 },{ -15, 10 } };
+	//std::vector<Point> goodPracticeSpawns{ { -14, 12 },{ -14, 11 },{ -15, 11 },{ -14, 9 },{ -13, 8 },{ -15, 5 },{ -14, 7 },{ -12, 12 },{ -9, 9 },{ -10, 10 },{ -11, 11 },{ -10, 11 },{ -14, 10 },{ -15, 10 } };
 
 	const auto& spawns = altarSpawns[altar];
 	std::mt19937 eng;
 	std::uniform_int_distribution<int> dist(0, (int)spawns.size() - 1);
 
 	eng.seed(seed);
-	GopArray<int> pars;
-	if (startPosition2 != Point::invalid)
-		pars = getGopMinGrid(altar, { startPosition1, startPosition2 });
-	else
-		pars = getPars(altar, startPosition1);
 	int total = 0;
 	for (int i = 0; i < numSpawns; ++i)
 	{
@@ -398,12 +393,17 @@ void findGoodSpawns(int altar, int numSpawns, int maxSeed = 10000, Point startPo
 	Point startPosition2 = Point::invalid)
 {
 	GopBoard::loadAltarFromFile(altarFiles[altar]);
-	std::set<std::pair<int, int>, std::greater<>> badness;
+	std::set<std::pair<int, int>, std::less<>> badness;
 
+	GopArray<int> pars;
+	if (startPosition2 != Point::invalid)
+		pars = getGopMinGrid(altar, { startPosition1, startPosition2 });
+	else
+		pars = getPars(altar, startPosition1);
 	auto startTime = currentTime();
-	for (int i = 0; i < maxSeed; ++i)
+	for (int i = 0; i <= maxSeed; ++i)
 	{
-		badness.emplace(seedBadness(altar, i, numSpawns, startPosition1, startPosition2), i);
+		badness.emplace(seedBadness(altar, i, numSpawns, pars), i);
 		if (badness.size() >= 100)
 		{
 			auto iter = badness.end();
@@ -479,6 +479,32 @@ void doBestDuoPositions(int altar, int8_t limits = 8)
 				continue;
 			values.emplace(getGopMinGridSum(altar, { p1, p2 }), p1, p2);
 		}
+	}
+
+	int top = 100;
+	for (auto entry : values)
+	{
+		if (--top <= 0)
+			break;
+		cout << std::get<0>(entry) << ", " << std::get<1>(entry).toString()
+			<< ", " << std::get<2>(entry).toString() << endl;
+	}
+}
+
+void doBestDuoPositionsGivenOne(int altar, Point location1, int8_t limits = 8)
+{
+	std::vector<Point> points;
+	std::set<std::tuple<int, Point, Point>, std::less<>> values;
+
+	GopBoard::loadAltarFromFile(altarFiles[altar]);
+	for (int8_t x = -limits; x <= limits; x++)
+		for (int8_t y = -limits; y <= limits; y++)
+			if (GopBoard::isPassable({ x, y }, PathMode::Player))
+				points.push_back({ x,y });
+
+	for (Point p2 : points)
+	{
+		values.emplace(getGopMinGridSum(altar, { location1, p2 }), location1, p2);
 	}
 
 	int top = 100;
@@ -624,12 +650,51 @@ std::vector<Point> bestQuadPositions[]
 	{ Point{ -2,0 }, Point{ 1,-2 }, Point{ 1,2 } },
 };
 
-int _tmain()
+void doParsJSON()
 {
-	findGoodSpawns(0, 62, 100, {2,0}, {-2,0});
-	//doSolverBenchmarks();
-	//int altar = 0;
-	//doBestTrioPositions(1);
-	////writeParSpreadsheetOutput(getGopMinGridWhichPlayer(altar, bestQuadPositions[altar]));
-	//doBestDuoPositions(1);
+	GopBoard::loadAltarFromFile(altarFiles[0]);
+	std::ostringstream ostr;
+	ostr << "[{";
+	for (int8_t y = -5; y <= 5; y++)
+		for (int8_t x = -5; x <= 5; x++)
+		{
+			Point p{ x, y };
+			if (GopBoard::isPassable(p, PathMode::Player))
+			{
+				auto parStr = getPars(0, p).toJSON();
+				ostr << "\"" << p.toString() << "\":";
+				ostr << parStr << ",";
+			}
+		}
+	ostr << "}]";
+
+	std::ofstream fout("pars.json");
+	fout << ostr.str() << endl;
+}
+
+enum Altar { Air, Mind, Water, Earth, Fire, Body };
+
+int main()
+{
+	using namespace std;
+
+	constexpr int Altar = Altar::Mind;
+	constexpr int Seed = 1;
+	constexpr int NumSpawns = 22;
+
+	const auto spawnBadness = getGopMinGrid(Altar, bestDuoPositions[Altar]);
+	const auto spawns = altarSpawns[Altar];
+	std::mt19937 eng;
+	std::uniform_int_distribution<int> dist(0, (int)spawns.size() - 1);
+
+	eng.seed(Seed);
+	int total = 0;
+	for (int i = 0; i < NumSpawns; ++i)
+	{
+		Point spawn = spawns[dist(eng)];
+		int badness = spawnBadness[spawn];
+		cout << setw(3) << (i+1) << setw(10) << spawn.toString() << setw(5) << badness << endl;
+		total += badness;
+	}
+	cout << "Average badness: " << (double)total / NumSpawns << endl;
 }

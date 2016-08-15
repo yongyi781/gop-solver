@@ -271,7 +271,7 @@ void SetCurrentAltar(HWND hWnd, int id)
 	GopBoard::loadAltar(data);
 	gs.freeze();
 	InvalidateRect(hWnd, NULL, false);
-	CheckMenuRadioItem(GetMenu(hWnd), ID_ALTAR_NONE, ID_ALTAR_BODY, id, MF_BYCOMMAND);
+	CheckMenuRadioItem(GetMenu(hWnd), ID_ALTAR_NONE, ID_ALTAR_NATURE, id, MF_BYCOMMAND);
 	// Current altar is a number from 1 (air) to 6 (body).
 	currentAltar = id - ID_ALTAR_AIR + 1;
 }
@@ -444,6 +444,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_ALTAR_EARTH:
 		case ID_ALTAR_FIRE:
 		case ID_ALTAR_BODY:
+		case ID_ALTAR_CHAOS:
+		case ID_ALTAR_NATURE:
 			SetCurrentAltar(hWnd, wmId);
 			break;
 		case ID_ORBS_1:

@@ -42,27 +42,15 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\GopSolverLib\air.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="..\GopSolverLib\body.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="..\GopSolverLib\earth.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="..\GopSolverLib\fire.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="..\GopSolverLib\mind.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="..\GopSolverLib\none.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="..\GopSolverLib\water.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
+    <Text Include="..\GopSolverLib\chaos.txt" />
+    <Text Include="..\GopSolverLib\nature.txt" />
+    <Text Include="..\GopSolverLib\air.txt" />
+    <Text Include="..\GopSolverLib\body.txt" />
+    <Text Include="..\GopSolverLib\earth.txt" />
+    <Text Include="..\GopSolverLib\fire.txt" />
+    <Text Include="..\GopSolverLib\mind.txt" />
+    <Text Include="..\GopSolverLib\none.txt" />
+    <Text Include="..\GopSolverLib\water.txt" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">

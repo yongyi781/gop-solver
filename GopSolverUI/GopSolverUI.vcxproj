@@ -108,9 +108,11 @@
   <ItemGroup>
     <Text Include="..\GopSolverLib\air.txt" />
     <Text Include="..\GopSolverLib\body.txt" />
+    <Text Include="..\GopSolverLib\chaos.txt" />
     <Text Include="..\GopSolverLib\earth.txt" />
     <Text Include="..\GopSolverLib\fire.txt" />
     <Text Include="..\GopSolverLib\mind.txt" />
+    <Text Include="..\GopSolverLib\nature.txt" />
     <Text Include="..\GopSolverLib\none.txt" />
     <Text Include="..\GopSolverLib\water.txt" />
   </ItemGroup>

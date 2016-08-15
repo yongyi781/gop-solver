@@ -393,14 +393,6 @@ int GameState::getHeuristicCostSingleOrb(const Orb& orb) const
 	}
 
 	// Add the distance to the altar.
-	Point nextNextLocation = GopBoard::nextOrbLocation(nextLocation, orb.target);
-
-	// If prototick, the player can't attract it the next tick.
-	//if (player.delayAttractFromMoving && player.lastMoveTarget != Point::invalid) {
-	//	OutputDebugString(L"Hit this location");
-	//	if (!GopBoard::isAdjacentToAltar(nextLocation))
-	//		h += 2 + GopBoard::distanceToAltar(nextNextLocation);
-	//}
 	if (!GopBoard::isAdjacentToAltar(orb.location))
 		h += 1 + GopBoard::distanceToAltar(nextLocation);
 	return h;
@@ -434,8 +426,15 @@ int GameState::getHeuristicCost() const
 		return getHeuristicCostSingleOrb(orbs[0]);
 	if (orbs.size() == 2)
 	{
+		int cost0 = getHeuristicCostSingleOrb(orbs[0]), cost1 = getHeuristicCostSingleOrb(orbs[1]);
+		// If one orb is going to score, just treat it as a 1-orb puzzle for the other orb.
+		if (GopBoard::willOrbScore(orbs[0]) || GopBoard::willOrbScore(orbs[1]))
+			return std::max(cost0, cost1);
+
 		// Use max of the two single orb costs.
-		return std::max(getHeuristicCostSingleOrb(orbs[0]), getHeuristicCostSingleOrb(orbs[1]));
+		int highCost = std::max(cost0, cost1);
+		int lowCost = std::min(cost0, cost1);
+		return highCost + lowCost - (highCost + lowCost) / 3;
 		//return getHeuristicCostSingleOrb(orbs[0]) + getHeuristicCostSingleOrb(orbs[1]);
 
 		//// Needs to move for both orbs
@@ -471,9 +470,10 @@ int GameState::getHeuristicCost() const
 	}
 	else if (orbs.size() == 3)
 	{
-		return std::max(
-			std::max(getHeuristicCostSingleOrb(orbs[0]), getHeuristicCostSingleOrb(orbs[1])),
-			getHeuristicCostSingleOrb(orbs[2]));
+		//return std::max(
+		//	std::max(getHeuristicCostSingleOrb(orbs[0]), getHeuristicCostSingleOrb(orbs[1])),
+		//	getHeuristicCostSingleOrb(orbs[2]));
+		return getHeuristicCostSingleOrb(orbs[0]) + getHeuristicCostSingleOrb(orbs[1]) + getHeuristicCostSingleOrb(orbs[2]);
 	}
 
 	return h;
